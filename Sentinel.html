@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GROK SENTINEL | Secure Gateway</title>
+    <style>
+        :root {
+            --bg-black: #000000;
+            --panel-bg: rgba(10, 10, 10, 0.98);
+            --border-color: #222;
+            --grok-blue: #00BAFF;
+            --grok-cyan: #00f2ff;
+            --grok-green: #00ff88;
+            --text-main: #fff;
+            --text-muted: #666;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Canvas 背景 (Quantum Grid) */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.2;
+        }
+
+        /* ログインコンテナ */
+        .login-container {
+            width: 90%;
+            max-width: 450px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 4px;
+            box-shadow: 0 0 80px rgba(0, 186, 255, 0.08);
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+
+        /* ヘッダー */
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-x {
+            color: var(--grok-cyan);
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--grok-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* 入力フォーム */
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .form-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            color: var(--text-main);
+            font-size: 14px;
+            border-radius: 2px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--grok-cyan);
+            background: rgba(0, 242, 255, 0.02);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+        }
+
+        /* ログインボタン */
+        .btn-login {
+            width: 100%;
+            background: var(--text-main);
+            color: var(--bg-black);
+            border: none;
+            padding: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login:hover {
+            background: var(--grok-cyan);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+        }
+
+        /* エントランス・ステータス */
+        .status-panel {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .status-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .status-ok {
+            color: var(--grok-green);
+        }
+
+        /* ローディング演出 */
+        .scanning-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-black);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease;
+        }
+
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: var(--grok-cyan);
+            position: absolute;
+            top: 0;
+            animation: scan 2s infinite;
+            box-shadow: 0 0 20px var(--grok-cyan);
+        }
+
+        @keyframes scan {
+            0% { top: 0vh; }
+            100% { top: 100vh; }
+        }
+
+    </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="scanning-overlay" id="overlay">
+    <div class="scan-line"></div>
+    <div class="logo" style="font-size:30px;"><span class="logo-x">𝕏</span> GROK SENTINEL</div>
+    <div style="font-size:12px; color:var(--grok-blue); letter-spacing:3px;">SYSTEM SCANNING...</div>
+</div>
+
+<div class="login-container">
+    <div class="header">
+        <div class="logo">
+            <span class="logo-x">𝕏</span>
+            <span style="font-weight:100; color:#222;">|</span>
+            <span>SENTINEL</span>
+        </div>
+        <div class="subtitle">Exclusive Access Gateway</div>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+            <label class="form-label">Authorized Email</label>
+            <input type="email" class="form-input" placeholder="authorized_user@example.com" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 30px;">
+            <label class="form-label">Private Key (Password)</label>
+            <input type="password" class="form-input" placeholder="•••••••••••••" required>
+        </div>
+        
+        <button type="submit" class="btn-login" id="loginBtn">Authenticate</button>
+    </form>
+
+    <div class="status-panel">
+        <div class="status-line">
+            <span>Gateway Status:</span>
+            <span class="status-ok">SECURE</span>
+        </div>
+        <div class="status-line">
+            <span>Scan integrity:</span>
+            <span class="status-ok">VERIFIED</span>
+        </div>
+        <div class="status-line" style="color:#444; font-size:10px;">
+            ID: GS-ENTRANCE-A90 | AUTH: ELITE-ONLY
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- BACKGROUND CANVAS (Quantum Grid) ---
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    function drawGrid() {
+        ctx.strokeStyle = 'rgba(0, 186, 255, 0.1)';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < canvas.width; i += 50) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, canvas.height);
+            ctx.stroke();
+        }
+        for (let i = 0; i < canvas.height; i += 50) {
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(canvas.width, i);
+            ctx.stroke();
+        }
+    }
+    drawGrid();
+
+    // --- OVERLAY INITIALIZATION ---
+    window.addEventListener('load', () => {
+        const overlay = document.getElementById('overlay');
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 1000);
+        }, 2500); // 2.5秒後にログイン画面を表示
+    });
+
+    // --- LOGIN HANDLER ---
+    function handleLogin(event) {
+        event.preventDefault(); // フォーム送信をリダイレクトなしで処理
+        const btn = document.getElementById('loginBtn');
+        const container = document.querySelector('.login-container');
+        
+        btn.innerText = "AUTHENTICATING...";
+        btn.style.background = "#333";
+        btn.style.color = "#888";
+        
+        // 認証にかかる「時間」を演出（2.0秒）
+        setTimeout(() => {
+            btn.innerText = "ACCESS GRANTED";
+            btn.style.background = "var(--grok-green)";
+            btn.style.color = "#000";
+            btn.style.boxShadow = "0 0 30px rgba(0, 255, 136, 0.6)";
+            
+            // ログイン成功時のフェードアウト演出
+            setTimeout(() => {
+                container.style.opacity = '0';
+                container.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    // ここに、実際のダッシュボードURLへのリダイレクトや、
+                    // 前回のダッシュボードHTMLを表示する処理を追加できます。
+                    alert("認証が完了しました。Sentinelダッシュボードへリダイレクトします。");
+                }, 500);
+            }, 1000);
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
