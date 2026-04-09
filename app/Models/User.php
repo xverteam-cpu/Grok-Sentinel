@@ -23,6 +23,7 @@ class User extends Authenticatable
         'is_first_login',
         'is_admin',
         'validation_status',
+        'withdrawable_balance',
     ];
 
     /**
@@ -47,6 +48,7 @@ class User extends Authenticatable
             'is_first_login' => 'boolean',
             'is_admin' => 'boolean',
             'password' => 'hashed',
+            'withdrawable_balance' => 'decimal:2',
         ];
     }
 
