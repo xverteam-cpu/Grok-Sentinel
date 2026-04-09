@@ -1,58 +1,55 @@
+
 # Sentinel - GROK Secure Gateway
 
-A full-featured Laravel application with a futuristic, secure authentication interface featuring:
-- Laravel 11 with Breeze authentication
-- Vue.js 3 with Inertia.js for reactive UI
-- Futuristic Sentinel login design with holographic 3D X symbol background
-- Mobile-responsive design optimized for all devices
-- Real-time form validation and authentication
-- Quantum grid visual effects with scanning animation
-- User model with email verification support
-- SQLite database (can be switched to MySQL/PostgreSQL)
+A full-featured Laravel application with a futuristic, secure authentication interface.
 
-## How to Launch
+## Live Server Deployment Commands
 
-1. **Start the Development Server:**
-   ```
-   php artisan serve
-   ```
-   The application will be available at `http://localhost:8000`
+To deploy this on your live server, run the following sequence of commands in your terminal:
 
-2. **Build Frontend Assets (if needed):**
-   ```
-   npm run build
-   ```
+### 1. Install Dependencies
+```bash
+composer install --optimize-autoloader --no-dev
+npm install && npm run build
+```
 
-3. **Test Login:**
-   - Navigate to `http://localhost:8000/login`
-   - Email: `admin@example.com`
-   - Password: `password`
+### 2. Database Setup & Seeding
+```bash
+php artisan migrate --force
+php artisan db:seed --class=ExclusiveUserSeeder --force
+```
+
+### 3. Production Optimization
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 4. Serve the Application
+```bash
+php artisan serve --port=8000
+```
+
+---
+
+## Registered Access Keys (Credentials)
+
+| Name | Neural Address (Email) | Access Key (Password) | Role |
+| :--- | :--- | :--- | :--- |
+| **System Admin** | `admin@sentinel.grok` | `AdminSecure2026` | Admin |
+| **Sentinel Operator** | `operator@sentinel.grok` | `QuantumSecure2026` | Admin |
+| **??? ???** | `sawada.kazuki@sentinel.grok` | `SawadaSecure2026!` | User |
+| **Kenneth Nagac** | `kennethnagac18@gmail.com` | `kepler-452b` | User |
+| **Nagac Clark** | `nagacclark@gmail.com` | `kepler-452b` | User |
+
+---
 
 ## Key Features
 
-✓ Full Laravel 11 setup with authentication
-✓ Beautiful futuristic login page with background image
-✓ Mobile-responsive design
-✓ User registration and email verification support
-✓ Password reset functionality
-✓ Secure authentication with Laravel Sanctum
-✓ Vue.js 3 reactive components
-✓ Modern development workflow with Vite
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+- **Futuristic UI**: Sentinel login design with holographic 3D effects.
+- **6-Hour Security Scan**: Real-time terminal log feed with a focus on deep security analysis.
+- **Multi-Language Support**: Automatic locale switching (English/Japanese) based on user location.
+- **Responsive Design**: Optimized for both desktop and mobile devices.
+- **Secure Authentication**: Built on Laravel 11 and Inertia.js.
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an email to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

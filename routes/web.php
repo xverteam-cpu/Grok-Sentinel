@@ -25,8 +25,8 @@ Route::middleware(['auth', 'detect.impossible.travel'])->group(function () {
     })->middleware(['verified'])->name('dashboard');
 
     Route::middleware('admin')->prefix('admin')->group(function () {
-        Route::get('/validations', [ValidationApprovalController::class, 'index'])->name('admin.validations');
-        Route::post('/validations/{user}', [ValidationApprovalController::class, 'update'])->name('admin.validations.update');
+        Route::get('/users-validations', [ValidationApprovalController::class, 'index'])->name('admin.users.validations');
+        Route::post('/users-validations/{user}', [ValidationApprovalController::class, 'update'])->name('admin.users.validations.update');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
