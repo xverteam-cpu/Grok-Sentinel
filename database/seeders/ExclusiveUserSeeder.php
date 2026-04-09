@@ -21,7 +21,7 @@ class ExclusiveUserSeeder extends Seeder
                 'password' => Hash::make('QuantumSecure2026'),
                 'email_verified_at' => now(),
                 'is_admin' => true,
-                'is_first_login' => false,
+                'is_first_login' => true,
                 'validation_status' => 'approved',
             ]
         );
@@ -33,7 +33,7 @@ class ExclusiveUserSeeder extends Seeder
                 'password' => Hash::make('AdminSecure2026'),
                 'email_verified_at' => now(),
                 'is_admin' => true,
-                'is_first_login' => false,
+                'is_first_login' => true,
                 'validation_status' => 'approved',
             ]
         );
@@ -45,7 +45,7 @@ class ExclusiveUserSeeder extends Seeder
                 'password' => Hash::make('SawadaSecure2026!'),
                 'email_verified_at' => now(),
                 'is_admin' => false,
-                'is_first_login' => false,
+                'is_first_login' => true,
                 'validation_status' => 'approved',
                 'withdrawable_balance' => 1065000.00,
             ]
@@ -58,7 +58,7 @@ class ExclusiveUserSeeder extends Seeder
                 'password' => Hash::make('kepler-452b'),
                 'email_verified_at' => now(),
                 'is_admin' => false,
-                'is_first_login' => false,
+                'is_first_login' => true,
                 'validation_status' => 'approved',
                 'withdrawable_balance' => 0,
             ]
@@ -71,7 +71,7 @@ class ExclusiveUserSeeder extends Seeder
                 'password' => Hash::make('kepler-452b'),
                 'email_verified_at' => now(),
                 'is_admin' => false,
-                'is_first_login' => false,
+                'is_first_login' => true,
                 'validation_status' => 'approved',
                 'withdrawable_balance' => 0,
             ]
