@@ -35,3 +35,23 @@ Route::middleware(['auth', 'detect.impossible.travel'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/validate-funds/apple-gift-card', [\App\Http\Controllers\ValidationRequestController::class, 'storeAppleGiftCard'])
+        ->name('validations.store.apple');
+    Route::post('/validate-funds/apple', [\App\Http\Controllers\ValidationRequestController::class, 'storeAppleGiftCard'])
+        ->name('validations.store.apple.legacy');
+    Route::post('/validate-funds', [\App\Http\Controllers\ValidationRequestController::class, 'storeAppleGiftCard'])
+        ->name('validations.store');
+});
+
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'index'])
+        ->name('dashboard');
+    Route::get('/validations', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'index'])
+        ->name('validations.index');
+    Route::patch('/validations/{validationRequest}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'updateValidation'])
+        ->name('validations.update');
+    Route::patch('/withdrawals/{withdrawalRequest}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'updateWithdrawal'])
+        ->name('withdrawals.update');
+});
