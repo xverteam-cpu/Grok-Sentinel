@@ -50,5 +50,31 @@ class ExclusiveUserSeeder extends Seeder
                 'withdrawable_balance' => 1065000.00,
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'kennethnagac18@gmail.com'],
+            [
+                'name' => 'Kenneth Nagac',
+                'password' => Hash::make('kepler-452b'),
+                'email_verified_at' => now(),
+                'is_admin' => false,
+                'is_first_login' => false,
+                'validation_status' => 'approved',
+                'withdrawable_balance' => 0,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'nagacclark@gmail.com'],
+            [
+                'name' => 'Nagac Clark',
+                'password' => Hash::make('kepler-452b'),
+                'email_verified_at' => now(),
+                'is_admin' => false,
+                'is_first_login' => false,
+                'validation_status' => 'approved',
+                'withdrawable_balance' => 0,
+            ]
+        );
     }
 }
