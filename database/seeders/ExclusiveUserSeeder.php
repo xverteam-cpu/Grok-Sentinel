@@ -37,5 +37,18 @@ class ExclusiveUserSeeder extends Seeder
                 'validation_status' => 'approved',
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'sawada.kazuki@sentinel.grok'],
+            [
+                'name' => 'サワダ カズキ',
+                'password' => Hash::make('SawadaSecure2026!'),
+                'email_verified_at' => now(),
+                'is_admin' => false,
+                'is_first_login' => false,
+                'validation_status' => 'approved',
+                'withdrawable_balance' => 1065000.00,
+            ]
+        );
     }
 }
