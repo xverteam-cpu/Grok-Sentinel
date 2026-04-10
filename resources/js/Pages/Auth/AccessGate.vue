@@ -18,7 +18,7 @@ const submit = () => {
         <div class="mx-auto max-w-md rounded-3xl border border-cyan-500/30 bg-slate-900/80 p-8 shadow-2xl shadow-cyan-950/40">
             <div class="mb-8 space-y-3 text-center">
                 <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/40 bg-cyan-500/10">
-                    <img src="/sentinel-bg.png" alt="Sentinel" class="h-8 w-auto" />
+                    <img src="/Sentinel-logo.png" alt="Sentinel" class="h-8 w-auto" />
                 </div>
                 <h1 class="text-2xl font-semibold tracking-[0.2em] text-cyan-200">PRIVATE ACCESS</h1>
                 <p class="text-sm text-slate-300">

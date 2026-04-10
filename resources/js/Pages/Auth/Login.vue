@@ -91,7 +91,7 @@ onMounted(() => {
     <div class="scanning-overlay" id="overlay">
         <div class="scan-line"></div>
         <div class="logo" style="font-size:30px;">
-            <img src="/sentinel-bg.png" alt="X" style="height: 40px; width: auto; display: inline-block; vertical-align: middle; margin-right: 10px;">
+            <img src="/Sentinel-logo.png" alt="Sentinel" style="height: 40px; width: auto; display: inline-block; vertical-align: middle; margin-right: 10px;">
             GROK SENTINEL
         </div>
         <div style="font-size:12px; color:var(--grok-blue); letter-spacing:3px;">SYSTEM SCANNING...</div>
@@ -100,7 +100,7 @@ onMounted(() => {
     <div class="login-container">
         <div class="header">
             <div class="logo">
-            <img src="/sentinel-bg.png" alt="X" style="height: 30px; width: auto; display: inline-block;">
+            <img src="/Sentinel-logo.png" alt="Sentinel" style="height: 30px; width: auto; display: inline-block;">
             <span style="font-weight:100; color:#222;">|</span>
             <span>SENTINEL</span>
         </div>
