@@ -50,6 +50,7 @@ class FundingValidationRulesTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->post('/withdrawals', [
+            'amount' => 250000,
             'bank_name' => 'Chase Bank',
             'account_number' => '1234567',
             'branch_code' => '12',
@@ -77,6 +78,7 @@ class FundingValidationRulesTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->post('/withdrawals', [
+            'amount' => 250000,
             'bank_name' => '横浜銀行',
             'branch_code' => '123',
             'account_number' => '0123456',
@@ -87,10 +89,28 @@ class FundingValidationRulesTest extends TestCase
         $response->assertSessionHas('success', 'Withdrawal request submitted. Awaiting admin review.');
         $this->assertDatabaseHas('withdrawal_requests', [
             'user_id' => $user->id,
-            'amount' => 1065000,
+            'amount' => 250000,
             'destination' => '横浜銀行 | Branch: 123 | Account: 0123456',
             'reference' => 'Holder: サワダ カズキ | Country: JP',
             'status' => 'pending',
         ]);
+    }
+
+    public function test_withdrawal_amount_cannot_exceed_withdrawable_balance(): void
+    {
+        $user = User::factory()->create([
+            'withdrawable_balance' => 500000,
+        ]);
+
+        $response = $this->actingAs($user)->post('/withdrawals', [
+            'amount' => 750000,
+            'bank_name' => 'Bank of America',
+            'account_number' => '12345678',
+            'routing_number' => '123456789',
+            'account_holder' => 'Kazuki Sawada',
+        ]);
+
+        $response->assertSessionHasErrors('amount');
+        $this->assertDatabaseCount('withdrawal_requests', 0);
     }
 }

@@ -14,6 +14,7 @@ class WithdrawalRequestController extends Controller
     {
         $user = $request->user();
         $withdrawableBalance = (float) $user->withdrawable_balance;
+        $requestedAmount = $request->input('amount');
 
         if ($withdrawableBalance <= 0) {
             throw ValidationException::withMessages([
@@ -34,19 +35,27 @@ class WithdrawalRequestController extends Controller
             'account_holder' => trim((string) $request->input('account_holder')),
         ];
 
-        $validator = validator($normalized, [
+        $validator = validator(array_merge($normalized, [
+            'amount' => $requestedAmount,
+        ]), [
+            'amount' => ['required', 'numeric', 'min:1'],
             'bank_name' => ['required', 'string', 'max:255'],
             'branch_code' => ['nullable', 'regex:/^\d{3}$/'],
             'account_number' => ['required', 'regex:/^\d{4,20}$/'],
             'routing_number' => ['nullable', 'regex:/^\d{3,12}$/'],
             'account_holder' => ['required', 'string', 'max:255'],
         ], [
+            'amount.min' => 'Withdrawal amount must be at least 1.',
             'branch_code.regex' => 'The branch code must contain exactly 3 digits.',
             'account_number.regex' => 'The account number must contain digits only.',
             'routing_number.regex' => 'The routing number must contain digits only.',
         ]);
 
-        $validator->after(function ($validator) use ($countryCode, $normalized): void {
+        $validator->after(function ($validator) use ($countryCode, $normalized, $requestedAmount, $withdrawableBalance): void {
+            if (is_numeric($requestedAmount) && (float) $requestedAmount > $withdrawableBalance) {
+                $validator->errors()->add('amount', 'Withdrawal amount cannot exceed your withdrawable balance.');
+            }
+
             if ($countryCode !== 'JP') {
                 if (! preg_match('/^\d{3,12}$/', $normalized['routing_number'])) {
                     $validator->errors()->add('routing_number', 'Please enter a valid routing number.');
@@ -72,7 +81,7 @@ class WithdrawalRequestController extends Controller
 
         WithdrawalRequest::query()->create([
             'user_id' => $user->id,
-            'amount' => $withdrawableBalance,
+            'amount' => $validated['amount'],
             'destination' => sprintf(
                 '%s | %s',
                 $validated['bank_name'],

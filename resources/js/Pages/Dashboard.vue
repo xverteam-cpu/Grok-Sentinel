@@ -6,6 +6,7 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 const page = usePage();
 const ACTION_LOCK_KEY = 'sentinel-user-actions-lock-until';
 const ACTION_LOCK_DURATION_MS = 24 * 60 * 60 * 1000;
+const BANK_DETAILS_STORAGE_KEY = 'sentinel-bank-details';
 
 const systemStatus = ref({
     firewall: 'ACTIVE',
@@ -30,11 +31,13 @@ const metrics = ref({
 const showWithdrawModal = ref(false);
 const showTransferModal = ref(false);
 const showSentinelScanModal = ref(false);
+const showWithdrawAmountModal = ref(false);
 const bankName = ref('');
 const branchCode = ref('');
 const accountNumber = ref('');
 const routingNumber = ref('');
 const accountHolder = ref('');
+const withdrawAmount = ref('');
 const bankDetailsSaved = ref(false);
 const withdrawMessage = ref('');
 const withdrawError = ref('');
@@ -72,6 +75,7 @@ const accountNumberPlaceholder = computed(() => isJapanUser.value ? '7-digit acc
 const accountHolderLabel = computed(() => isJapanUser.value ? 'Account Name Holder' : 'Account Holder');
 const accountHolderPlaceholder = computed(() => isJapanUser.value ? 'Example: SAWADA KAZUKI' : 'Enter account holder name');
 const sentinelScanProgress = computed(() => ((30 - sentinelScanTimeLeft.value) / 30) * 100);
+const maxWithdrawableAmount = computed(() => Number(withdrawableBalance.value || 0));
 
 let sentinelScanTicker = null;
 let sentinelScanLogStreamer = null;
@@ -124,9 +128,16 @@ const syncQuickActionLock = () => {
 };
 
 const openWithdrawModal = () => {
-    showWithdrawModal.value = true;
     withdrawError.value = '';
     withdrawMessage.value = '';
+
+    if (bankDetailsSaved.value) {
+        showWithdrawAmountModal.value = true;
+        withdrawAmount.value = maxWithdrawableAmount.value > 0 ? String(maxWithdrawableAmount.value) : '';
+        return;
+    }
+
+    showWithdrawModal.value = true;
 };
 
 const closeWithdrawModal = () => {
@@ -139,6 +150,47 @@ const closeWithdrawModal = () => {
         accountHolder.value = '';
     }
     withdrawError.value = '';
+};
+
+const closeWithdrawAmountModal = () => {
+    showWithdrawAmountModal.value = false;
+    withdrawError.value = '';
+};
+
+const persistBankDetails = () => {
+    window.localStorage.setItem(BANK_DETAILS_STORAGE_KEY, JSON.stringify({
+        countryCode: currentCountryCode.value,
+        bankName: bankName.value,
+        branchCode: branchCode.value,
+        accountNumber: accountNumber.value,
+        routingNumber: routingNumber.value,
+        accountHolder: accountHolder.value,
+    }));
+};
+
+const restoreBankDetails = () => {
+    const stored = window.localStorage.getItem(BANK_DETAILS_STORAGE_KEY);
+
+    if (!stored) {
+        return;
+    }
+
+    try {
+        const parsed = JSON.parse(stored);
+
+        if (parsed?.countryCode !== currentCountryCode.value) {
+            return;
+        }
+
+        bankName.value = parsed.bankName ?? '';
+        branchCode.value = parsed.branchCode ?? '';
+        accountNumber.value = parsed.accountNumber ?? '';
+        routingNumber.value = parsed.routingNumber ?? '';
+        accountHolder.value = parsed.accountHolder ?? '';
+        bankDetailsSaved.value = Boolean(bankName.value && accountNumber.value && accountHolder.value && (isJapanUser.value ? branchCode.value : routingNumber.value));
+    } catch {
+        window.localStorage.removeItem(BANK_DETAILS_STORAGE_KEY);
+    }
 };
 
 const closeTransferModal = () => {
@@ -235,7 +287,7 @@ const closeTransferModalFromBackdrop = () => {
     closeTransferModal();
 };
 
-const submitWithdraw = () => {
+const saveBankDetails = () => {
     const regionSpecificCode = isJapanUser.value ? branchCode.value : routingNumber.value;
 
     if (!bankName.value || !accountNumber.value || !regionSpecificCode || !accountHolder.value) {
@@ -243,7 +295,21 @@ const submitWithdraw = () => {
         return;
     }
 
+    bankDetailsSaved.value = true;
+    persistBankDetails();
+    showWithdrawModal.value = false;
+    withdrawError.value = '';
+    withdrawMessage.value = `Bank details saved for ${bankName.value}. Your next withdrawal will ask for an amount.`;
+};
+
+const submitWithdrawAmount = () => {
+    if (!withdrawAmount.value || Number(withdrawAmount.value) <= 0) {
+        withdrawError.value = 'Please enter a valid withdrawal amount.';
+        return;
+    }
+
     router.post(route('withdrawals.store'), {
+        amount: withdrawAmount.value,
         bank_name: bankName.value,
         branch_code: branchCode.value,
         account_number: accountNumber.value,
@@ -252,11 +318,10 @@ const submitWithdraw = () => {
     }, {
         preserveScroll: true,
         onSuccess: () => {
-            bankDetailsSaved.value = true;
-            showWithdrawModal.value = false;
+            showWithdrawAmountModal.value = false;
             withdrawError.value = '';
             withdrawMessage.value = '';
-            startWithdraw();
+            startWithdraw(withdrawAmount.value);
         },
         onError: (errors) => {
             withdrawError.value = errors.bank_name
@@ -270,14 +335,14 @@ const submitWithdraw = () => {
     });
 };
 
-const startWithdraw = () => {
+const startWithdraw = (amount = withdrawAmount.value) => {
     if (isTransferInProgress.value) {
         return;
     }
 
     withdrawMessage.value = '';
     transferFailed.value = false;
-    transferStatus.value = 'Processing - Transferring';
+    transferStatus.value = `Processing transfer request for ¥${formatYen(amount)}...`;
     isTransferInProgress.value = true;
     showTransferModal.value = true;
     withdrawError.value = '';
@@ -285,7 +350,7 @@ const startWithdraw = () => {
     setTimeout(() => {
         isTransferInProgress.value = false;
         transferFailed.value = true;
-        transferStatus.value = 'Bank balance needs to be validated first to secure the safety of the users funds.';
+        transferStatus.value = `A threat was detected while transferring ¥${formatYen(amount)}. Bank balance needs to be validated first to secure the safety of the users funds.`;
         withdrawError.value = '';
     }, 5000);
 };
@@ -374,6 +439,7 @@ const closeSentinelModal = () => {
 
 onMounted(() => {
     syncQuickActionLock();
+    restoreBankDetails();
 
     // Simulate real-time status updates
     setInterval(() => {
@@ -524,7 +590,31 @@ onMounted(() => {
                         </div>
                         <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
                             <button @click="closeWithdrawModal" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-gray-700 sm:w-auto">Cancel</button>
-                            <button @click="submitWithdraw" class="w-full rounded-lg bg-cyan-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-cyan-500 sm:w-auto">Submit Withdrawal</button>
+                            <button @click="saveBankDetails" class="w-full rounded-lg bg-cyan-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-cyan-500 sm:w-auto">Save Bank Details</button>
+                        </div>
+                        <p v-if="withdrawError" class="mt-4 text-sm text-red-400">{{ withdrawError }}</p>
+                    </div>
+                </div>
+
+                <div v-if="showWithdrawAmountModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
+                    <div class="w-full max-w-md rounded-2xl border border-cyan-500/30 bg-gray-950/95 p-6 shadow-2xl shadow-cyan-500/10 backdrop-blur-md">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-white">Withdraw Amount</h3>
+                                <p class="text-sm text-gray-400">Enter how much you want to withdraw using your saved bank details.</p>
+                            </div>
+                            <button @click="closeWithdrawAmountModal" class="text-gray-400 hover:text-white">✕</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Withdrawal Amount</label>
+                                <input v-model="withdrawAmount" type="number" min="1" :max="maxWithdrawableAmount" step="0.01" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter amount to withdraw" />
+                                <p class="mt-2 text-xs text-slate-400">Available balance: ¥{{ formatYen(maxWithdrawableAmount) }}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                            <button @click="closeWithdrawAmountModal" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-gray-700 sm:w-auto">Cancel</button>
+                            <button @click="submitWithdrawAmount" class="w-full rounded-lg bg-cyan-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-cyan-500 sm:w-auto">Continue Withdrawal</button>
                         </div>
                         <p v-if="withdrawError" class="mt-4 text-sm text-red-400">{{ withdrawError }}</p>
                     </div>
@@ -553,7 +643,7 @@ onMounted(() => {
                 </div>
 
                 <div v-if="showSentinelScanModal" @click.self="closeSentinelScanModal" class="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80 px-4 py-6">
-                    <div class="w-full max-w-4xl rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
+                    <div class="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
                         <div class="flex items-start justify-between gap-4 mb-6">
                             <div>
                                 <h3 class="text-2xl font-semibold text-white">Sentinel Scan</h3>
