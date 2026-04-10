@@ -25,33 +25,41 @@ const submit = () => {
 
 onMounted(() => {
     const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    function drawGrid() {
-        ctx.strokeStyle = 'rgba(0, 186, 255, 0.1)';
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i < canvas.width; i += 50) {
-            ctx.beginPath();
-            ctx.moveTo(i, 0);
-            ctx.lineTo(i, canvas.height);
-            ctx.stroke();
-        }
-        for (let i = 0; i < canvas.height; i += 50) {
-            ctx.beginPath();
-            ctx.moveTo(0, i);
-            ctx.lineTo(canvas.width, i);
-            ctx.stroke();
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            function drawGrid() {
+                ctx.strokeStyle = 'rgba(0, 186, 255, 0.1)';
+                ctx.lineWidth = 0.5;
+                for (let i = 0; i < canvas.width; i += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = 0; i < canvas.height; i += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+            }
+            drawGrid();
         }
     }
-    drawGrid();
 
     const overlay = document.getElementById('overlay');
-    setTimeout(() => {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.style.display = 'none', 1000);
-    }, 2500);
+    if (overlay) {
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                if (overlay) overlay.style.display = 'none';
+            }, 1000);
+        }, 1500);
+    }
 });
 </script>
 
@@ -139,11 +147,10 @@ body {
     background-color: var(--bg-black);
     color: var(--text-main);
     margin: 0;
-    overflow: hidden;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
 }
 
 /* Background overlay for readability */
@@ -340,10 +347,17 @@ body::before {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    body {
+        overflow-y: auto !important;
+        align-items: flex-start;
+        padding: 40px 10px;
+    }
+
     .login-container {
-        width: 95%;
+        width: 100%;
         max-width: 100%;
-        padding: 30px 20px;
+        padding: 25px 15px;
+        margin-top: 20px;
     }
 
     .logo {
@@ -353,7 +367,7 @@ body::before {
 
     .form-input {
         padding: 12px;
-        font-size: 16px;
+        font-size: 16px; /* Prevents auto-zoom on iOS */
     }
 
     .btn-login {
