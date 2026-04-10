@@ -1,5 +1,6 @@
 <script setup>
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 defineProps({
   pendingValidations: {
@@ -17,7 +18,8 @@ defineProps({
 })
 
 const page = usePage()
-const generatedAccess = page.props.flash?.generatedAccess
+const generatedAccess = computed(() => page.props.flash?.generatedAccess ?? null)
+const flashSuccess = computed(() => page.props.flash?.success ?? null)
 
 const accessForm = useForm({
   name: '',
@@ -60,54 +62,60 @@ const generateAccessGrant = () => {
           <p class="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">Active device grants: {{ activeAccessGrantsCount }}</p>
         </div>
 
-        <div class="mt-6 grid gap-4 md:grid-cols-3">
-          <div>
-            <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">User Name</label>
-            <input
-              v-model="accessForm.name"
-              type="text"
-              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
-              placeholder="User full name"
-            >
-            <p v-if="accessForm.errors.name" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.name }}</p>
+        <form class="mt-6" @submit.prevent="generateAccessGrant">
+          <div class="grid gap-4 md:grid-cols-3">
+            <div>
+              <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">User Name</label>
+              <input
+                v-model="accessForm.name"
+                type="text"
+                class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
+                placeholder="User full name"
+              >
+              <p v-if="accessForm.errors.name" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.name }}</p>
+            </div>
+            <div>
+              <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Login Email</label>
+              <input
+                v-model="accessForm.email"
+                type="email"
+                class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
+                placeholder="user@example.com"
+              >
+              <p v-if="accessForm.errors.email" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.email }}</p>
+            </div>
+            <div>
+              <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Temporary Password</label>
+              <input
+                v-model="accessForm.password"
+                type="text"
+                class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
+                placeholder="Minimum 8 characters"
+              >
+              <p v-if="accessForm.errors.password" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.password }}</p>
+            </div>
           </div>
-          <div>
-            <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Login Email</label>
-            <input
-              v-model="accessForm.email"
-              type="email"
-              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
-              placeholder="user@example.com"
-            >
-            <p v-if="accessForm.errors.email" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.email }}</p>
-          </div>
-          <div>
-            <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Temporary Password</label>
-            <input
-              v-model="accessForm.password"
-              type="text"
-              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
-              placeholder="Minimum 8 characters"
-            >
-            <p v-if="accessForm.errors.password" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.password }}</p>
-          </div>
-        </div>
 
-        <div class="mt-4 flex justify-end">
-          <button
-            class="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
-            :disabled="accessForm.processing"
-            @click="generateAccessGrant"
-          >
-            {{ accessForm.processing ? 'Generating...' : 'Generate Access Link' }}
-          </button>
+          <div class="mt-4 flex justify-end">
+            <button
+              type="submit"
+              class="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="accessForm.processing"
+            >
+              {{ accessForm.processing ? 'Generating...' : 'Generate Access Link' }}
+            </button>
+          </div>
+        </form>
+
+        <div v-if="flashSuccess" class="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-4 text-sm text-emerald-200">
+          {{ flashSuccess }}
         </div>
 
         <div v-if="generatedAccess" class="mt-4 rounded-xl border border-amber-500/30 bg-slate-950/80 p-4 text-sm text-slate-200">
           <p><span class="text-slate-400">Name:</span> {{ generatedAccess.name }}</p>
           <p class="mt-2"><span class="text-slate-400">Email:</span> {{ generatedAccess.email }}</p>
           <p class="mt-2"><span class="text-slate-400">Password:</span> {{ generatedAccess.password }}</p>
-          <p><span class="text-slate-400">Code:</span> {{ generatedAccess.code }}</p>
+          <p class="mt-2"><span class="text-slate-400">Code:</span> {{ generatedAccess.code }}</p>
           <p class="mt-2 break-all"><span class="text-slate-400">Link:</span> {{ generatedAccess.link }}</p>
         </div>
       </section>
