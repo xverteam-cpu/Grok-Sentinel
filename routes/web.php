@@ -1,14 +1,23 @@
 <?php
 
+use App\Http\Controllers\AccessController;
 use App\Http\Controllers\Admin\ValidationApprovalController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+Route::get('/access', [AccessController::class, 'show'])->name('access.show');
+Route::post('/access', [AccessController::class, 'redeem'])->name('access.redeem');
+Route::get('/access/{token}', function (string $token, AccessController $controller) {
+    request()->merge(['token' => $token]);
+
+    return $controller->redeem(request());
+})->name('access.link');
+
 Route::get('/', function () {
     return redirect()->route('login');
-});
+})->middleware('private.access');
 
 Route::middleware(['auth', 'detect.impossible.travel'])->group(function () {
     Route::get('/first-login', function () {
@@ -50,6 +59,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         ->name('dashboard');
     Route::get('/validations', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'index'])
         ->name('validations.index');
+    Route::post('/access-grants', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'generateAccessGrant'])
+        ->name('access-grants.store');
     Route::patch('/validations/{validationRequest}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'updateValidation'])
         ->name('validations.update');
     Route::patch('/withdrawals/{withdrawalRequest}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'updateWithdrawal'])

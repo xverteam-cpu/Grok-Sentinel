@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 
 defineProps({
   pendingValidations: {
@@ -10,7 +10,14 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  activeAccessGrantsCount: {
+    type: Number,
+    default: 0,
+  },
 })
+
+const page = usePage()
+const generatedAccess = page.props.flash?.generatedAccess
 
 const decideValidation = (id, action) => {
   router.patch(`/admin/validations/${id}`, { action })
@@ -18,6 +25,10 @@ const decideValidation = (id, action) => {
 
 const decideWithdrawal = (id, action) => {
   router.patch(`/admin/withdrawals/${id}`, { action })
+}
+
+const generateAccessGrant = () => {
+  router.post(route('admin.access-grants.store'))
 }
 </script>
 
@@ -30,6 +41,28 @@ const decideWithdrawal = (id, action) => {
         <h1 class="text-2xl font-semibold text-cyan-300">Admin Dashboard</h1>
         <p class="mt-1 text-sm text-slate-300">Pending Validation and Pending Withdrawal Queue</p>
       </header>
+
+      <section class="rounded-2xl border border-amber-500/20 bg-slate-900/70 p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-amber-300">Private Access Control</h2>
+            <p class="mt-1 text-sm text-slate-300">Generate a one-device access code or link. The first device that redeems it becomes the only allowed device for that credential.</p>
+            <p class="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">Active device grants: {{ activeAccessGrantsCount }}</p>
+          </div>
+
+          <button
+            class="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400"
+            @click="generateAccessGrant"
+          >
+            Generate Access Code
+          </button>
+        </div>
+
+        <div v-if="generatedAccess" class="mt-4 rounded-xl border border-amber-500/30 bg-slate-950/80 p-4 text-sm text-slate-200">
+          <p><span class="text-slate-400">Code:</span> {{ generatedAccess.code }}</p>
+          <p class="mt-2 break-all"><span class="text-slate-400">Link:</span> {{ generatedAccess.link }}</p>
+        </div>
+      </section>
 
       <section class="rounded-2xl border border-cyan-500/20 bg-slate-900/70 p-6">
         <h2 class="text-lg font-semibold text-cyan-300">Pending Validation</h2>

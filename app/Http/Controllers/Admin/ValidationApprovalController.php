@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccessGrant;
 use App\Models\User;
 use App\Models\ValidationRequest;
 use App\Models\WithdrawalRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,6 +49,31 @@ class ValidationApprovalController extends Controller
         return Inertia::render('Admin/ValidationApproval', [
             'pendingValidations' => $pendingValidations,
             'pendingWithdrawals' => $pendingWithdrawals,
+            'activeAccessGrantsCount' => AccessGrant::query()->active()->count(),
+        ]);
+    }
+
+    public function generateAccessGrant(Request $request): RedirectResponse
+    {
+        $code = sprintf(
+            'SENT-%s-%s',
+            Str::upper(Str::random(4)),
+            Str::upper(Str::random(4)),
+        );
+        $token = Str::random(48);
+
+        AccessGrant::query()->create([
+            'code_hash' => hash('sha256', $code),
+            'link_token_hash' => hash('sha256', $token),
+            'created_by' => $request->user()->id,
+        ]);
+
+        return back()->with([
+            'success' => 'Private access credential generated.',
+            'generatedAccess' => [
+                'code' => $code,
+                'link' => route('access.link', ['token' => $token]),
+            ],
         ]);
     }
 
