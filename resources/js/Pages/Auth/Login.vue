@@ -81,12 +81,12 @@ onMounted(() => {
 
         <form @submit.prevent="submit">
             <div class="form-group">
-                <label class="form-label">Authorized Email</label>
-                <input type="email" class="form-input" placeholder="authorized_user@example.com" v-model="form.email" required>
+                <label for="email" class="form-label">Authorized Email</label>
+                <input id="email" name="email" type="email" class="form-input" placeholder="authorized_user@example.com" v-model="form.email" required autocomplete="username">
             </div>
             <div class="form-group" style="margin-bottom: 30px;">
-                <label class="form-label">Private Key (Password)</label>
-                <input type="password" class="form-input" placeholder="•••••••••••••" v-model="form.password" required>
+                <label for="password" class="form-label">Private Key (Password)</label>
+                <input id="password" name="password" type="password" class="form-input" placeholder="•••••••••••••" v-model="form.password" required autocomplete="current-password">
             </div>
             
             <button type="submit" class="btn-login" :disabled="form.processing">
