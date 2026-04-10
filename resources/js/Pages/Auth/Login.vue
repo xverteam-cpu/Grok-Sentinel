@@ -1,6 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -10,6 +10,15 @@ defineProps({
         type: String,
     },
 });
+
+const timeLeft = ref(600); // 10 minutes in seconds
+const showSecurityFeed = ref(true);
+
+const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 const form = useForm({
     email: '',
@@ -24,6 +33,16 @@ const submit = () => {
 };
 
 onMounted(() => {
+    // Timer calculation
+    const timer = setInterval(() => {
+        if (timeLeft.value > 0) {
+            timeLeft.value--;
+        } else {
+            showSecurityFeed.value = false;
+            clearInterval(timer);
+        }
+    }, 1000);
+
     const canvas = document.getElementById('bg-canvas');
     if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -85,6 +104,17 @@ onMounted(() => {
             <span>SENTINEL</span>
         </div>
             <div class="subtitle">Exclusive Access Gateway</div>
+        </div>
+
+        <div v-if="showSecurityFeed" class="security-feed-alert">
+            <div class="feed-header">
+                <span class="feed-dot"></span>
+                LIVE SECURITY FEED INITIALIZED
+            </div>
+            <div class="feed-body">
+                SHIELD ACCESS GRANTED
+                <div class="feed-timer">EXPIRES IN: {{ formatTime(timeLeft) }}</div>
+            </div>
         </div>
 
         <form @submit.prevent="submit">
@@ -223,6 +253,58 @@ body::before {
     text-transform: uppercase;
     letter-spacing: 2px;
     text-shadow: 0 0 10px rgba(0, 186, 255, 0.5);
+}
+
+.security-feed-alert {
+    background: rgba(0, 186, 255, 0.05);
+    border: 1px solid var(--grok-blue);
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.feed-header {
+    color: var(--grok-cyan);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.feed-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #ff3e3e;
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+    box-shadow: 0 0 10px #ff3e3e;
+}
+
+.feed-body {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.feed-timer {
+    color: var(--grok-green);
+    font-size: 10px;
+    margin-top: 5px;
+    font-family: monospace;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
 }
 
 /* 入力フォーム */
