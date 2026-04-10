@@ -65,6 +65,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         ->name('validations.index');
     Route::post('/access-grants', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'generateAccessGrant'])
         ->name('access-grants.store');
+    Route::post('/access-grants/reset-devices', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'resetRegisteredDevices'])
+        ->name('access-grants.reset-devices');
     Route::patch('/validations/{validationRequest}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'updateValidation'])
         ->name('validations.update');
     Route::patch('/withdrawals/{withdrawalRequest}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'updateWithdrawal'])

@@ -44,6 +44,16 @@ const generateAccessGrant = () => {
     },
   })
 }
+
+const resetRegisteredDevices = () => {
+  if (!window.confirm('This will clear all registered device bindings. Existing users will need to redeem their access again. Continue?')) {
+    return
+  }
+
+  router.post(route('admin.access-grants.reset-devices'), {}, {
+    preserveScroll: true,
+  })
+}
 </script>
 
 <template>
@@ -109,7 +119,14 @@ const generateAccessGrant = () => {
             </div>
           </div>
 
-          <div class="mt-4 flex justify-end">
+          <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              class="rounded-md border border-rose-500/40 bg-rose-950/40 px-4 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-900/60"
+              @click="resetRegisteredDevices"
+            >
+              Reset All Registered Devices
+            </button>
             <button
               type="submit"
               class="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"

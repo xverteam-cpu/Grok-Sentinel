@@ -102,6 +102,19 @@ class ValidationApprovalController extends Controller
         ]);
     }
 
+    public function resetRegisteredDevices(): RedirectResponse
+    {
+        AccessGrant::query()->update([
+            'device_id_hash' => null,
+            'user_agent_hash' => null,
+            'bound_at' => null,
+            'last_used_at' => null,
+            'revoked_at' => null,
+        ]);
+
+        return back()->with('success', 'All registered devices have been reset. Existing access credentials can now be redeemed again on a fresh device.');
+    }
+
     public function updateValidation(Request $request, ValidationRequest $validationRequest): RedirectResponse
     {
         $validated = $request->validate([
