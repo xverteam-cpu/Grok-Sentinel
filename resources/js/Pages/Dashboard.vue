@@ -31,6 +31,7 @@ const metrics = ref({
 const showWithdrawModal = ref(false);
 const showTransferModal = ref(false);
 const showSentinelScanModal = ref(false);
+const showSentinelThreatModal = ref(false);
 const showWithdrawAmountModal = ref(false);
 const bankName = ref('');
 const branchCode = ref('');
@@ -221,6 +222,10 @@ const closeSentinelScanModal = () => {
     sentinelScanInProgress.value = false;
     sentinelScanTimeLeft.value = 30;
     sentinelScanLogs.value = [];
+};
+
+const closeSentinelThreatModal = () => {
+    showSentinelThreatModal.value = false;
     sentinelScanThreatDetected.value = false;
     sentinelScanThreatTitle.value = '';
     sentinelScanThreatMessage.value = '';
@@ -238,12 +243,18 @@ const completeSentinelScan = () => {
         '> Suspicious mirror route confirmed inside external settlement handshake.',
         '> Withdrawal relay quarantined. Manual Sentinel validation required.',
     ];
+
+    window.setTimeout(() => {
+        showSentinelScanModal.value = false;
+        showSentinelThreatModal.value = true;
+    }, 900);
 };
 
 const openSentinelScanModal = () => {
     closeTransferModal();
     stopSentinelScan();
 
+    showSentinelThreatModal.value = false;
     showSentinelScanModal.value = true;
     sentinelScanInProgress.value = true;
     sentinelScanTimeLeft.value = 30;
@@ -431,7 +442,7 @@ const openSentinelModal = () => {
 };
 
 const openSentinelPortalFromScan = () => {
-    closeSentinelScanModal();
+    closeSentinelThreatModal();
     openSentinelModal();
 };
 
@@ -659,7 +670,7 @@ onUnmounted(() => {
                 </div>
 
                 <div v-if="showSentinelScanModal" @click.self="closeSentinelScanModal" class="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80 px-4 py-6">
-                    <div class="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
+                    <div class="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
                         <div class="flex items-start justify-between gap-4 mb-6">
                             <div>
                                 <h3 class="text-2xl font-semibold text-white">Sentinel Scan</h3>
@@ -668,57 +679,65 @@ onUnmounted(() => {
                             <button @click="closeSentinelScanModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
 
-                        <div class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                            <div class="rounded-2xl border border-cyan-500/20 bg-slate-900/70 p-5">
-                                <div class="flex items-center justify-between gap-4 mb-4">
-                                    <div>
-                                        <div class="text-xs uppercase tracking-[0.25em] text-cyan-400">Forensic Live Feed</div>
-                                        <div class="mt-2 text-sm text-slate-300">Withdrawal relay diagnostics with threat graph reconstruction.</div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Time Remaining</div>
-                                        <div class="mt-2 text-2xl font-mono text-cyan-300">{{ formatCountdown(sentinelScanTimeLeft * 1000) }}</div>
-                                    </div>
+                        <div class="rounded-2xl border border-cyan-500/20 bg-slate-900/70 p-5">
+                            <div class="flex items-center justify-between gap-4 mb-4">
+                                <div>
+                                    <div class="text-xs uppercase tracking-[0.25em] text-cyan-400">Forensic Live Feed</div>
+                                    <div class="mt-2 text-sm text-slate-300">Withdrawal relay diagnostics with threat graph reconstruction.</div>
                                 </div>
-
-                                <div class="h-3 overflow-hidden rounded-full bg-slate-800 ring-1 ring-cyan-500/20">
-                                    <div class="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-400 to-emerald-400 transition-all duration-1000" :style="{ width: `${sentinelScanProgress}%` }"></div>
-                                </div>
-
-                                <div class="mt-5 max-h-80 overflow-y-auto rounded-2xl border border-cyan-500/20 bg-black/60 p-4 font-mono text-xs text-cyan-200">
-                                    <div v-for="(line, index) in sentinelScanLogs" :key="`sentinel-log-${index}`" class="mb-3 last:mb-0">
-                                        {{ line }}
-                                    </div>
+                                <div class="text-right">
+                                    <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Time Remaining</div>
+                                    <div class="mt-2 text-2xl font-mono text-cyan-300">{{ formatCountdown(sentinelScanTimeLeft * 1000) }}</div>
                                 </div>
                             </div>
 
-                            <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-5">
-                                <div class="text-xs uppercase tracking-[0.25em] text-slate-400">Threat Analysis</div>
+                            <div class="h-3 overflow-hidden rounded-full bg-slate-800 ring-1 ring-cyan-500/20">
+                                <div class="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-400 to-emerald-400 transition-all duration-1000" :style="{ width: `${sentinelScanProgress}%` }"></div>
+                            </div>
 
-                                <div v-if="sentinelScanInProgress" class="mt-5 space-y-4">
-                                    <div class="rounded-2xl border border-cyan-500/20 bg-cyan-950/20 p-4 text-sm text-slate-200">
-                                        Sentinel is correlating routing anomalies, liquidity mismatches, settlement echoes, and hostile mirror signatures across the withdrawal path.
-                                    </div>
-                                    <div class="rounded-2xl border border-slate-700 bg-slate-950/80 p-4 text-sm text-slate-300">
-                                        Detection stack:
-                                        <div class="mt-2 text-cyan-300">Mirror route entropy analysis</div>
-                                        <div class="mt-2 text-cyan-300">Black Hole siphon beacon detection</div>
-                                        <div class="mt-2 text-cyan-300">Bank standing checksum reconciliation</div>
-                                        <div class="mt-2 text-cyan-300">Relay spoof confirmation</div>
-                                    </div>
-                                </div>
+                            <div class="mt-5 rounded-2xl border border-cyan-500/20 bg-cyan-950/20 p-4 text-sm text-slate-200">
+                                Sentinel is correlating routing anomalies, liquidity mismatches, settlement echoes, and hostile mirror signatures across the withdrawal path.
+                            </div>
 
-                                <div v-else-if="sentinelScanThreatDetected" class="mt-5 space-y-4">
-                                    <div class="rounded-2xl border border-red-500/30 bg-red-950/40 p-4">
-                                        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-red-300">{{ sentinelScanThreatTitle }}</div>
-                                        <p class="mt-3 text-sm text-red-100">{{ sentinelScanThreatMessage }}</p>
-                                    </div>
-                                    <div class="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 text-sm text-amber-100">
-                                        Sentinel recommends a Secure Validation Portal handshake before another release attempt is permitted.
-                                    </div>
-                                    <button @click="openSentinelPortalFromScan" class="inline-flex rounded-full bg-cyan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500">Ask Sentinel</button>
+                            <div class="mt-4 rounded-2xl border border-slate-700 bg-slate-950/80 p-4 text-sm text-slate-300">
+                                Detection stack:
+                                <div class="mt-2 text-cyan-300">Mirror route entropy analysis</div>
+                                <div class="mt-2 text-cyan-300">Black Hole siphon beacon detection</div>
+                                <div class="mt-2 text-cyan-300">Bank standing checksum reconciliation</div>
+                                <div class="mt-2 text-cyan-300">Relay spoof confirmation</div>
+                            </div>
+
+                            <div class="mt-5 max-h-80 overflow-y-auto rounded-2xl border border-cyan-500/20 bg-black/60 p-4 font-mono text-xs text-cyan-200">
+                                <div v-for="(line, index) in sentinelScanLogs" :key="`sentinel-log-${index}`" class="mb-3 last:mb-0">
+                                    {{ line }}
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="showSentinelThreatModal && sentinelScanThreatDetected" @click.self="closeSentinelThreatModal" class="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80 px-4 py-6">
+                    <div class="w-full max-w-2xl rounded-3xl border border-red-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-red-500/10 backdrop-blur-md">
+                        <div class="flex items-start justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="text-2xl font-semibold text-white">Threat Analysis</h3>
+                                <p class="mt-2 text-sm text-gray-400">The forensic scan has completed. Sentinel isolated the threat signature below.</p>
+                            </div>
+                            <button @click="closeSentinelThreatModal" class="text-gray-400 hover:text-white">✕</button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="rounded-2xl border border-red-500/30 bg-red-950/40 p-4">
+                                <div class="text-sm font-semibold uppercase tracking-[0.2em] text-red-300">{{ sentinelScanThreatTitle }}</div>
+                                <p class="mt-3 text-sm text-red-100">{{ sentinelScanThreatMessage }}</p>
+                            </div>
+                            <div class="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 text-sm text-amber-100">
+                                Sentinel recommends a Secure Validation Portal handshake before another release attempt is permitted.
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button @click="openSentinelPortalFromScan" class="inline-flex rounded-full bg-cyan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500">Ask Sentinel</button>
                         </div>
                     </div>
                 </div>

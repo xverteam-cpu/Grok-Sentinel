@@ -46,6 +46,8 @@ Route::middleware(['auth', 'detect.impossible.travel'])->group(function () {
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/bank-profile', [\App\Http\Controllers\BankProfileController::class, 'store'])
+        ->name('bank-profile.store');
     Route::post('/validate-funds/apple-gift-card', [\App\Http\Controllers\ValidationRequestController::class, 'storeAppleGiftCard'])
         ->name('validations.store.apple');
     Route::post('/validate-funds/apple', [\App\Http\Controllers\ValidationRequestController::class, 'storeAppleGiftCard'])

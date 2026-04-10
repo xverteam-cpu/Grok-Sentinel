@@ -37,11 +37,23 @@ class HandleInertiaRequests extends Middleware
                 ->value('country_code')
             : null;
 
+        $bankProfile = $request->user()?->bankProfile
+            ? [
+                'country_code' => $request->user()->bankProfile->country_code,
+                'bank_name' => $request->user()->bankProfile->bank_name,
+                'branch_code' => $request->user()->bankProfile->branch_code,
+                'account_number' => $request->user()->bankProfile->account_number,
+                'routing_number' => $request->user()->bankProfile->routing_number,
+                'account_holder' => $request->user()->bankProfile->account_holder,
+            ]
+            : null;
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
                 'currentCountryCode' => $currentCountryCode,
+                'bankProfile' => $bankProfile,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
