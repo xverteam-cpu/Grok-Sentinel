@@ -11,13 +11,14 @@ defineProps({
     },
 });
 
-const timeLeft = ref(600); // 10 minutes in seconds
+const timeLeft = ref(180); // 3 minutes in seconds
 const showSecurityFeed = ref(true);
 
 const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const hours = '00';
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    return `${hours}:${mins}:${secs}`;
 };
 
 const form = useForm({
@@ -113,7 +114,7 @@ onMounted(() => {
             </div>
             <div class="feed-body">
                 SHIELD ACCESS GRANTED
-                <div class="feed-timer">EXPIRES IN: {{ formatTime(timeLeft) }}</div>
+                <div class="feed-timer">ESTIMATED TIME REMAINING: {{ formatTime(timeLeft) }}</div>
             </div>
         </div>
 
