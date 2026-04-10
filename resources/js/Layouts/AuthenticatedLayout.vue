@@ -6,8 +6,10 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
+import { useLocaleText } from '@/Composables/useLocaleText';
 
 const showingNavigationDropdown = ref(false);
+const { t } = useLocaleText();
 
 onMounted(() => {
     initBackground();
@@ -62,7 +64,7 @@ function initBackground() {
                                 :active="route().current('dashboard')"
                                 class="text-cyan-400 hover:text-cyan-300"
                             >
-                                Control Center
+                                {{ t('common.controlCenter', 'Control Center') }}
                             </NavLink>
                         </div>
                     </div>
@@ -75,7 +77,7 @@ function initBackground() {
 
                     <div class="-me-2 flex items-center sm:hidden">
                         <button @click="showingNavigationDropdown = !showingNavigationDropdown">
-                            Menu
+                            {{ t('common.menu', 'Menu') }}
                         </button>
                     </div>
                 </div>
@@ -93,7 +95,7 @@ function initBackground() {
                             :active="route().current('dashboard')"
                             class="text-cyan-400"
                         >
-                            Control Center
+                            {{ t('common.controlCenter', 'Control Center') }}
                         </ResponsiveNavLink>
                     </div>
 
@@ -109,7 +111,7 @@ function initBackground() {
 
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile.edit')" class="text-white">
-                                Profile
+                                {{ t('common.profile', 'Profile') }}
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 :href="route('logout')"
@@ -117,7 +119,7 @@ function initBackground() {
                                 as="button"
                                 class="text-red-400"
                             >
-                                Log Out
+                                {{ t('common.logout', 'Log Out') }}
                             </ResponsiveNavLink>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
+import { useLocaleText } from '@/Composables/useLocaleText';
 
 defineProps({
     canResetPassword: {
@@ -13,6 +14,7 @@ defineProps({
 
 const timeLeft = ref(180); // 3 minutes in seconds
 const showSecurityFeed = ref(true);
+const { t } = useLocaleText();
 
 const formatTime = (seconds) => {
     const hours = '00';
@@ -84,7 +86,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="Log in" />
+    <Head :title="t('login.title', 'Log in')" />
 
     <canvas id="bg-canvas"></canvas>
 
@@ -94,7 +96,7 @@ onMounted(() => {
             <img src="/Sentinel-logo.png" alt="Sentinel" style="height: 40px; width: auto; display: inline-block; vertical-align: middle; margin-right: 10px;">
             GROK SENTINEL
         </div>
-        <div style="font-size:12px; color:var(--grok-blue); letter-spacing:3px;">SYSTEM SCANNING...</div>
+        <div style="font-size:12px; color:var(--grok-blue); letter-spacing:3px;">{{ t('login.scanning', 'SYSTEM SCANNING...') }}</div>
     </div>
 
     <div class="login-container">
@@ -104,44 +106,44 @@ onMounted(() => {
             <span style="font-weight:100; color:#222;">|</span>
             <span>SENTINEL</span>
         </div>
-            <div class="subtitle">Exclusive Access Gateway</div>
+            <div class="subtitle">{{ t('login.gateway', 'Exclusive Access Gateway') }}</div>
         </div>
 
         <div v-if="showSecurityFeed" class="security-feed-alert">
             <div class="feed-header">
                 <span class="feed-dot"></span>
-                LIVE SECURITY FEED INITIALIZED
+                {{ t('login.liveFeed', 'LIVE SECURITY FEED INITIALIZED') }}
             </div>
             <div class="feed-body">
-                SHIELD ACCESS GRANTED
-                <div class="feed-timer">ESTIMATED TIME REMAINING: {{ formatTime(timeLeft) }}</div>
+                {{ t('login.shieldGranted', 'SHIELD ACCESS GRANTED') }}
+                <div class="feed-timer">{{ t('login.estimated', 'ESTIMATED TIME REMAINING') }}: {{ formatTime(timeLeft) }}</div>
             </div>
         </div>
 
         <form @submit.prevent="submit">
             <div class="form-group">
-                <label for="email" class="form-label">Authorized Email</label>
+                <label for="email" class="form-label">{{ t('login.authorizedEmail', 'Authorized Email') }}</label>
                 <input id="email" name="email" type="email" class="form-input" placeholder="authorized_user@example.com" v-model="form.email" required autocomplete="username">
             </div>
             <div class="form-group" style="margin-bottom: 30px;">
-                <label for="password" class="form-label">Private Key (Password)</label>
+                <label for="password" class="form-label">{{ t('login.password', 'Private Key (Password)') }}</label>
                 <input id="password" name="password" type="password" class="form-input" placeholder="•••••••••••••" v-model="form.password" required autocomplete="current-password">
             </div>
             
             <button type="submit" class="btn-login" :disabled="form.processing">
-                <span v-if="form.processing">AUTHENTICATING...</span>
-                <span v-else>AUTHENTICATE</span>
+                <span v-if="form.processing">{{ t('login.authenticating', 'AUTHENTICATING...') }}</span>
+                <span v-else>{{ t('login.authenticate', 'AUTHENTICATE') }}</span>
             </button>
         </form>
 
         <div class="status-panel">
             <div class="status-line">
-                <span>Gateway Status:</span>
-                <span class="status-ok">SECURE</span>
+                <span>{{ t('login.gatewayStatus', 'Gateway Status:') }}</span>
+                <span class="status-ok">{{ t('login.secure', 'SECURE') }}</span>
             </div>
             <div class="status-line">
-                <span>Scan integrity:</span>
-                <span class="status-ok">VERIFIED</span>
+                <span>{{ t('login.scanIntegrity', 'Scan integrity:') }}</span>
+                <span class="status-ok">{{ t('login.verified', 'VERIFIED') }}</span>
             </div>
             <div class="status-line" style="color:#444; font-size:10px;">
                 ID: GS-ENTRANCE-A90 | AUTH: ELITE-ONLY

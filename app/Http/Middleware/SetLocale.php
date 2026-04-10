@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\LoginSession;
 use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Services\GeoIpService;
+use Illuminate\Http\Request;
 
 class SetLocale
 {
@@ -21,6 +22,21 @@ class SetLocale
 
     public function handle(Request $request, Closure $next)
     {
+        if ($request->user()) {
+            $countryCode = LoginSession::query()
+                ->where('user_id', $request->user()->id)
+                ->latest('created_at')
+                ->value('country_code');
+
+            if ($countryCode && isset($this->countryToLocale[$countryCode])) {
+                $locale = $this->countryToLocale[$countryCode];
+                App::setLocale($locale);
+                session()->put('locale', $locale);
+
+                return $next($request);
+            }
+        }
+
         if (session()->has('locale')) {
             App::setLocale(session()->get('locale'));
         } else {

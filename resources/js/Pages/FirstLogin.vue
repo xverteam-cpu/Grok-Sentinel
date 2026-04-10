@@ -5,7 +5,7 @@
                 𝕏 <span :class="{ 'logo-complete': scanningComplete }">GROK</span> SENTINEL
             </div>
 
-            <p class="portal-copy">LIVE SECURITY FEED INITIALIZED FOR SHIELD ACCESS</p>
+            <p class="portal-copy">{{ t('firstLogin.liveFeed', 'LIVE SECURITY FEED INITIALIZED FOR SHIELD ACCESS') }}</p>
 
             <div v-if="loaderVisible" class="loader">
                 <div class="loader-bar" :style="{ width: loaderProgress + '%' }"></div>
@@ -18,16 +18,16 @@
             </div>
 
             <div v-if="loaderVisible" class="estimation-box">
-                <p class="estimation-text">ESTIMATED TIME REMAINING: {{ formattedTimeRemaining }}</p>
+                <p class="estimation-text">{{ t('firstLogin.estimated', 'ESTIMATED TIME REMAINING') }}: {{ formattedTimeRemaining }}</p>
             </div>
 
             <div v-if="scanningComplete" class="completion-box">
-                <div class="completion-title">SCANNING COMPLETE</div>
+                <div class="completion-title">{{ t('firstLogin.scanningComplete', 'SCANNING COMPLETE') }}</div>
                 <p class="completion-copy">
-                    Neural handshake established. All security protocols are active.
+                    {{ t('firstLogin.handshake', 'Neural handshake established. All security protocols are active.') }}
                 </p>
                 <button class="btn-access btn-success" @click="goToDashboard">
-                    GO TO DASHBOARD
+                    {{ t('firstLogin.goToDashboard', 'GO TO DASHBOARD') }}
                 </button>
             </div>
         </div>
@@ -48,7 +48,7 @@
                 @click="activate"
                 class="activate-button"
             >
-                Activate
+                {{ t('firstLogin.activate', 'Activate') }}
             </button>
         </div>
     </div>
@@ -58,6 +58,7 @@
 import { usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref, computed } from 'vue';
 import axios from 'axios';
+import { useLocaleText } from '@/Composables/useLocaleText';
 
 const randomLogs = [
     '> Establishing encrypted neural handshake...',
@@ -79,6 +80,7 @@ const SECURITY_FEED_DURATION_SECONDS = 120;
 
 export default {
     setup() {
+        const { t } = useLocaleText();
         const page = usePage();
         const video = ref(null);
         const showButton = ref(false);
@@ -177,6 +179,7 @@ export default {
         });
 
         return {
+            t,
             video,
             showButton,
             showSecurityFeed,
