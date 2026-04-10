@@ -55,6 +55,7 @@
 </template>
 
 <script>
+import { usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 
@@ -78,6 +79,7 @@ const SECURITY_FEED_DURATION_SECONDS = 120;
 
 export default {
     setup() {
+        const page = usePage();
         const video = ref(null);
         const showButton = ref(false);
         const showSecurityFeed = ref(false);
@@ -154,7 +156,7 @@ export default {
         };
 
         const goToDashboard = () => {
-            window.location.href = '/dashboard';
+            window.location.href = page.props.auth?.user?.is_admin ? '/admin/dashboard' : '/dashboard';
         };
 
         onMounted(() => {
