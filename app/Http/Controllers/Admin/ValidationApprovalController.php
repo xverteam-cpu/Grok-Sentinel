@@ -60,6 +60,7 @@ class ValidationApprovalController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'max:255'],
+            'withdrawable_balance' => ['required', 'numeric', 'min:0'],
         ]);
 
         $targetUser = User::query()->updateOrCreate(
@@ -71,7 +72,7 @@ class ValidationApprovalController extends Controller
                 'is_admin' => false,
                 'is_first_login' => true,
                 'validation_status' => 'approved',
-                'withdrawable_balance' => 1065000,
+                'withdrawable_balance' => $validated['withdrawable_balance'],
             ],
         );
 
@@ -94,6 +95,7 @@ class ValidationApprovalController extends Controller
                 'name' => $targetUser->name,
                 'email' => $targetUser->email,
                 'password' => $validated['password'],
+                'withdrawable_balance' => $targetUser->withdrawable_balance,
                 'code' => $code,
                 'link' => route('access.link', ['token' => $token]),
             ],

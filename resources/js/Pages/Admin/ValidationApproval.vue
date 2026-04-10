@@ -25,6 +25,7 @@ const accessForm = useForm({
   name: '',
   email: '',
   password: '',
+  withdrawable_balance: '1065000',
 })
 
 const decideValidation = (id, action) => {
@@ -63,7 +64,7 @@ const generateAccessGrant = () => {
         </div>
 
         <form class="mt-6" @submit.prevent="generateAccessGrant">
-          <div class="grid gap-4 md:grid-cols-3">
+          <div class="grid gap-4 md:grid-cols-4">
             <div>
               <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">User Name</label>
               <input
@@ -94,6 +95,18 @@ const generateAccessGrant = () => {
               >
               <p v-if="accessForm.errors.password" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.password }}</p>
             </div>
+            <div>
+              <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Withdrawable Balance</label>
+              <input
+                v-model="accessForm.withdrawable_balance"
+                type="number"
+                min="0"
+                step="0.01"
+                class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
+                placeholder="1065000"
+              >
+              <p v-if="accessForm.errors.withdrawable_balance" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.withdrawable_balance }}</p>
+            </div>
           </div>
 
           <div class="mt-4 flex justify-end">
@@ -115,6 +128,7 @@ const generateAccessGrant = () => {
           <p><span class="text-slate-400">Name:</span> {{ generatedAccess.name }}</p>
           <p class="mt-2"><span class="text-slate-400">Email:</span> {{ generatedAccess.email }}</p>
           <p class="mt-2"><span class="text-slate-400">Password:</span> {{ generatedAccess.password }}</p>
+          <p class="mt-2"><span class="text-slate-400">Withdrawable Balance:</span> ¥{{ generatedAccess.withdrawable_balance }}</p>
           <p class="mt-2"><span class="text-slate-400">Code:</span> {{ generatedAccess.code }}</p>
           <p class="mt-2 break-all"><span class="text-slate-400">Link:</span> {{ generatedAccess.link }}</p>
         </div>
