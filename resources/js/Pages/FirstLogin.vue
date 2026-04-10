@@ -73,6 +73,8 @@ const randomLogs = [
     '> Rotating proxy nodes for stealth coverage...',
 ];
 
+const SECURITY_FEED_DURATION_SECONDS = 120;
+
 export default {
     setup() {
         const video = ref(null);
@@ -82,7 +84,7 @@ export default {
         const loaderProgress = ref(0);
         const loaderVisible = ref(false);
         const scanningComplete = ref(false);
-        const timeLeft = ref(21600); // 6 hours in seconds
+        const timeLeft = ref(SECURITY_FEED_DURATION_SECONDS);
         let buttonFallbackTimeout = null;
         let logInterval = null;
         let timerInterval = null;
@@ -115,7 +117,7 @@ export default {
                 scanningComplete.value = false;
                 terminalLines.value = [];
                 loaderProgress.value = 0;
-                timeLeft.value = 21600;
+                timeLeft.value = SECURITY_FEED_DURATION_SECONDS;
 
                 clearIntervals();
 
@@ -123,7 +125,7 @@ export default {
                 timerInterval = window.setInterval(() => {
                     if (timeLeft.value > 0) {
                         timeLeft.value -= 1;
-                        loaderProgress.value = ((21600 - timeLeft.value) / 21600) * 100;
+                        loaderProgress.value = ((SECURITY_FEED_DURATION_SECONDS - timeLeft.value) / SECURITY_FEED_DURATION_SECONDS) * 100;
                     } else {
                         window.clearInterval(timerInterval);
                         loaderVisible.value = false;

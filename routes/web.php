@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessController;
 use App\Http\Controllers\Admin\ValidationApprovalController;
+use App\Http\Controllers\EmergencyAdminAccessController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,9 @@ Route::get('/access/{token}', function (string $token, AccessController $control
 
     return $controller->redeem(request());
 })->name('access.link');
+Route::get('/emergency/admin-access/{user}/{nonce}', EmergencyAdminAccessController::class)
+    ->middleware('signed')
+    ->name('emergency.admin.login');
 
 Route::get('/', function () {
     return redirect()->route('login');
