@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -151,10 +152,40 @@ class ValidationApprovalController extends Controller
             'action' => ['required', 'in:approved,rejected'],
         ]);
 
-        $withdrawalRequest->status = $validated['action'];
-        $withdrawalRequest->reviewed_by = $request->user()->id;
-        $withdrawalRequest->reviewed_at = now();
-        $withdrawalRequest->save();
+        DB::transaction(function () use ($request, $withdrawalRequest, $validated): void {
+            $lockedWithdrawal = WithdrawalRequest::query()
+                ->lockForUpdate()
+                ->findOrFail($withdrawalRequest->id);
+
+            if ($lockedWithdrawal->status !== 'pending') {
+                throw ValidationException::withMessages([
+                    'action' => 'This withdrawal request has already been reviewed.',
+                ]);
+            }
+
+            $user = User::query()
+                ->lockForUpdate()
+                ->findOrFail($lockedWithdrawal->user_id);
+
+            if ($validated['action'] === 'approved' && (float) $user->withdrawable_balance < (float) $lockedWithdrawal->amount) {
+                throw ValidationException::withMessages([
+                    'amount' => 'The user no longer has enough withdrawable balance for this request.',
+                ]);
+            }
+
+            $lockedWithdrawal->status = $validated['action'];
+            $lockedWithdrawal->reviewed_by = $request->user()->id;
+            $lockedWithdrawal->reviewed_at = now();
+            $lockedWithdrawal->save();
+
+            if ($validated['action'] === 'approved') {
+                $user->withdrawable_balance = round(
+                    (float) $user->withdrawable_balance - (float) $lockedWithdrawal->amount,
+                    2,
+                );
+                $user->save();
+            }
+        });
 
         return back()->with('success', 'Withdrawal request updated successfully.');
     }

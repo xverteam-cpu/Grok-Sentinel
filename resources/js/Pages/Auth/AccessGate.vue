@@ -1,9 +1,24 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const props = defineProps({
+    prefilledToken: {
+        type: String,
+        default: '',
+    },
+    linkDetected: {
+        type: Boolean,
+        default: false,
+    },
+});
+
+const page = usePage();
+const flashSuccess = computed(() => page.props.flash?.success ?? null);
 
 const form = useForm({
     code: '',
-    token: '',
+    token: props.prefilledToken,
 });
 
 const submit = () => {
@@ -24,6 +39,10 @@ const submit = () => {
                 <p class="text-sm text-slate-300">
                     This site is restricted. Redeem an admin-issued access code or device access link before login.
                 </p>
+            </div>
+
+            <div v-if="flashSuccess" class="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-4 text-sm text-emerald-200">
+                {{ flashSuccess }}
             </div>
 
             <form class="space-y-5" @submit.prevent="submit">
@@ -50,6 +69,7 @@ const submit = () => {
                         class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
                         placeholder="Paste token if link did not open automatically"
                     />
+                    <p v-if="linkDetected" class="mt-2 text-xs text-cyan-300">Access link detected. Review the request and confirm this device manually.</p>
                 </div>
 
                 <p v-if="form.errors.code" class="text-sm text-rose-400">{{ form.errors.code }}</p>
@@ -59,7 +79,7 @@ const submit = () => {
                     class="w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="form.processing"
                 >
-                    {{ form.processing ? 'Validating Device...' : 'Unlock This Device' }}
+                    {{ form.processing ? 'Validating Device...' : (linkDetected ? 'Confirm This Device' : 'Unlock This Device') }}
                 </button>
             </form>
         </div>

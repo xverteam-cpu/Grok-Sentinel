@@ -14,13 +14,24 @@ class AccessController extends Controller
 {
     public const DEVICE_COOKIE = 'sentinel_device_id';
 
-    public function show(): Response|RedirectResponse
+    public function show(Request $request): Response|RedirectResponse
     {
-        if (self::hasValidDeviceAccess(request())) {
+        if (self::hasValidDeviceAccess($request)) {
             return redirect()->route('login');
         }
 
-        return Inertia::render('Auth/AccessGate');
+        return Inertia::render('Auth/AccessGate', [
+            'prefilledToken' => trim((string) $request->query('token', '')),
+            'linkDetected' => $request->boolean('link'),
+        ]);
+    }
+
+    public function showLink(string $token): RedirectResponse
+    {
+        return redirect()->route('access.show', [
+            'token' => $token,
+            'link' => 1,
+        ])->with('success', 'Access link detected. Confirm this device to continue to login.');
     }
 
     public function redeem(Request $request): RedirectResponse

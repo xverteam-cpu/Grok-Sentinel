@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 const page = usePage();
 const ACTION_LOCK_KEY = 'sentinel-user-actions-lock-until';
@@ -79,6 +79,8 @@ const maxWithdrawableAmount = computed(() => Number(withdrawableBalance.value ||
 
 let sentinelScanTicker = null;
 let sentinelScanLogStreamer = null;
+let metricsTicker = null;
+let actionLockTicker = null;
 
 const sentinelScanFeed = [
     '> Initializing Sentinel forensic relay for failed withdrawal trace...',
@@ -442,17 +444,31 @@ onMounted(() => {
     restoreBankDetails();
 
     // Simulate real-time status updates
-    setInterval(() => {
+    metricsTicker = window.setInterval(() => {
         metrics.value.threatsBlocked += Math.floor(Math.random() * 5) + 1;
         metrics.value.responseTime = `${12 + Math.floor(Math.random() * 6)}ms`;
         metrics.value.uptime = `99.${98 + Math.floor(Math.random() * 2)}%`;
     }, 5000);
 
-    setInterval(() => {
+    actionLockTicker = window.setInterval(() => {
         if (actionsLockedUntil.value) {
             actionLockCountdown.value = formatCountdown(actionsLockedUntil.value - Date.now());
         }
     }, 1000);
+});
+
+onUnmounted(() => {
+    stopSentinelScan();
+
+    if (metricsTicker) {
+        window.clearInterval(metricsTicker);
+        metricsTicker = null;
+    }
+
+    if (actionLockTicker) {
+        window.clearInterval(actionLockTicker);
+        actionLockTicker = null;
+    }
 });
 </script>
 

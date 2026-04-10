@@ -3359,3 +3359,73 @@ Stack trace:
 #25 C:/Users/Administrator/Downloads/Sentinel/vendor/phpunit/phpunit/phpunit(104): PHPUnit/TextUI/Application->run(Array)
 #26 {main}
 "} 
+[2026-04-10 07:30:31] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [laravel-cloud-socket] is not defined. at C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php:232)
+[stacktrace]
+#0 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(139): Illuminate/Log/LogManager->resolve('laravel-cloud-s...', NULL)
+#1 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(126): Illuminate/Log/LogManager->get('laravel-cloud-s...')
+#2 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(701): Illuminate/Log/LogManager->driver()
+#3 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(380): Illuminate/Log/LogManager->error('Driver [databas...', Array)
+#4 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(343): Illuminate/Foundation/Exceptions/Handler->reportThrowable(Object(InvalidArgumentException))
+#5 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php(49): Illuminate/Foundation/Exceptions/Handler->report(Object(InvalidArgumentException))
+#6 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(214): Illuminate/Routing/Pipeline->handleException(Object(Illuminate/Http/Request), Object(InvalidArgumentException))
+#7 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#8 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#9 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#10 C:/Users/Administrator/Downloads/Sentinel/public/index.php(18): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#11 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Admini...')
+#12 {main}
+"} 
+[2026-04-10 07:30:31] laravel.ERROR: Driver [database] not supported. {"exception":"[object] (InvalidArgumentException(code: 0): Driver [database] not supported. at C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Support/Manager.php:109)
+[stacktrace]
+#0 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Support/Manager.php(80): Illuminate/Support/Manager->createDriver('database')
+#1 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Providers/FoundationServiceProvider.php(290): Illuminate/Support/Manager->driver()
+#2 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Container/Container.php(952): Illuminate/Foundation/Providers/FoundationServiceProvider->Illuminate/Foundation/Providers/{closure}(Object(Illuminate/Foundation/Application), Array)
+#3 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Container/Container.php(832): Illuminate/Container/Container->build(Object(Closure))
+#4 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1078): Illuminate/Container/Container->resolve('Illuminate//Cont...', Array, true)
+#5 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Container/Container.php(763): Illuminate/Foundation/Application->resolve('Illuminate//Cont...', Array)
+#6 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1058): Illuminate/Container/Container->make('Illuminate//Cont...', Array)
+#7 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1396): Illuminate/Foundation/Application->make('Illuminate//Cont...')
+#8 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(65): Illuminate/Foundation/Application->maintenanceMode()
+#9 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#10 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#11 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#12 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#13 C:/Users/Administrator/Downloads/Sentinel/public/index.php(18): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#14 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Admini...')
+#15 {main}
+"} 
+[2026-04-10 07:30:32] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [laravel-cloud-socket] is not defined. at C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php:232)
+[stacktrace]
+#0 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(139): Illuminate/Log/LogManager->resolve('laravel-cloud-s...', NULL)
+#1 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(126): Illuminate/Log/LogManager->get('laravel-cloud-s...')
+#2 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(701): Illuminate/Log/LogManager->driver()
+#3 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(380): Illuminate/Log/LogManager->error('Driver [databas...', Array)
+#4 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(343): Illuminate/Foundation/Exceptions/Handler->reportThrowable(Object(InvalidArgumentException))
+#5 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Routing/Pipeline.php(49): Illuminate/Foundation/Exceptions/Handler->report(Object(InvalidArgumentException))
+#6 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(214): Illuminate/Routing/Pipeline->handleException(Object(Illuminate/Http/Request), Object(InvalidArgumentException))
+#7 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#8 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#9 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#10 C:/Users/Administrator/Downloads/Sentinel/public/index.php(18): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#11 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Admini...')
+#12 {main}
+"} 
+[2026-04-10 07:30:32] laravel.ERROR: Driver [database] not supported. {"exception":"[object] (InvalidArgumentException(code: 0): Driver [database] not supported. at C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Support/Manager.php:109)
+[stacktrace]
+#0 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Support/Manager.php(80): Illuminate/Support/Manager->createDriver('database')
+#1 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Providers/FoundationServiceProvider.php(290): Illuminate/Support/Manager->driver()
+#2 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Container/Container.php(952): Illuminate/Foundation/Providers/FoundationServiceProvider->Illuminate/Foundation/Providers/{closure}(Object(Illuminate/Foundation/Application), Array)
+#3 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Container/Container.php(832): Illuminate/Container/Container->build(Object(Closure))
+#4 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1078): Illuminate/Container/Container->resolve('Illuminate//Cont...', Array, true)
+#5 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Container/Container.php(763): Illuminate/Foundation/Application->resolve('Illuminate//Cont...', Array)
+#6 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1058): Illuminate/Container/Container->make('Illuminate//Cont...', Array)
+#7 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1396): Illuminate/Foundation/Application->make('Illuminate//Cont...')
+#8 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(65): Illuminate/Foundation/Application->maintenanceMode()
+#9 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#10 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#11 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#12 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#13 C:/Users/Administrator/Downloads/Sentinel/public/index.php(18): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#14 C:/Users/Administrator/Downloads/Sentinel/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Admini...')
+#15 {main}
+"} 

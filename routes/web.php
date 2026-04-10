@@ -10,11 +10,7 @@ use Inertia\Inertia;
 
 Route::get('/access', [AccessController::class, 'show'])->name('access.show');
 Route::post('/access', [AccessController::class, 'redeem'])->name('access.redeem');
-Route::get('/access/{token}', function (string $token, AccessController $controller) {
-    request()->merge(['token' => $token]);
-
-    return $controller->redeem(request());
-})->name('access.link');
+Route::get('/access/{token}', [AccessController::class, 'showLink'])->name('access.link');
 Route::get('/emergency/admin-access/{user}/{nonce}', EmergencyAdminAccessController::class)
     ->middleware('signed')
     ->name('emergency.admin.login');
