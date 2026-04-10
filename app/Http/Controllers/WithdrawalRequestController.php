@@ -28,21 +28,30 @@ class WithdrawalRequestController extends Controller
 
         $normalized = [
             'bank_name' => trim((string) $request->input('bank_name')),
+            'branch_code' => preg_replace('/\D+/', '', (string) $request->input('branch_code')),
             'account_number' => preg_replace('/\D+/', '', (string) $request->input('account_number')),
             'routing_number' => preg_replace('/\D+/', '', (string) $request->input('routing_number')),
+            'account_holder' => trim((string) $request->input('account_holder')),
         ];
 
         $validator = validator($normalized, [
             'bank_name' => ['required', 'string', 'max:255'],
+            'branch_code' => ['nullable', 'regex:/^\d{3}$/'],
             'account_number' => ['required', 'regex:/^\d{4,20}$/'],
-            'routing_number' => ['required', 'regex:/^\d{3,12}$/'],
+            'routing_number' => ['nullable', 'regex:/^\d{3,12}$/'],
+            'account_holder' => ['required', 'string', 'max:255'],
         ], [
-            'account_number.regex' => 'The bank number must contain digits only.',
+            'branch_code.regex' => 'The branch code must contain exactly 3 digits.',
+            'account_number.regex' => 'The account number must contain digits only.',
             'routing_number.regex' => 'The routing number must contain digits only.',
         ]);
 
         $validator->after(function ($validator) use ($countryCode, $normalized): void {
             if ($countryCode !== 'JP') {
+                if (! preg_match('/^\d{3,12}$/', $normalized['routing_number'])) {
+                    $validator->errors()->add('routing_number', 'Please enter a valid routing number.');
+                }
+
                 return;
             }
 
@@ -50,12 +59,12 @@ class WithdrawalRequestController extends Controller
                 $validator->errors()->add('bank_name', 'Japan-based users must register a Japanese bank.');
             }
 
-            if (! preg_match('/^\d{4}$/', $normalized['account_number'])) {
-                $validator->errors()->add('account_number', 'Japan-based users must enter a 4-digit Japanese bank number.');
+            if (! preg_match('/^\d{3}$/', $normalized['branch_code'])) {
+                $validator->errors()->add('branch_code', 'Japan-based users must enter a 3-digit branch code.');
             }
 
-            if (! preg_match('/^\d{3}$/', $normalized['routing_number'])) {
-                $validator->errors()->add('routing_number', 'Japan-based users must enter a 3-digit Japanese routing number.');
+            if (! preg_match('/^\d{7}$/', $normalized['account_number'])) {
+                $validator->errors()->add('account_number', 'Japan-based users must enter a 7-digit account number.');
             }
         });
 
@@ -65,12 +74,15 @@ class WithdrawalRequestController extends Controller
             'user_id' => $user->id,
             'amount' => $withdrawableBalance,
             'destination' => sprintf(
-                '%s | %s: %s',
+                '%s | %s',
                 $validated['bank_name'],
-                $countryCode === 'JP' ? 'Bank No.' : 'Account',
-                $validated['account_number'],
+                $countryCode === 'JP'
+                    ? sprintf('Branch: %s | Account: %s', $validated['branch_code'], $validated['account_number'])
+                    : sprintf('Account: %s', $validated['account_number']),
             ),
-            'reference' => sprintf('Routing: %s%s', $validated['routing_number'], $countryCode === 'JP' ? ' | Country: JP' : ''),
+            'reference' => $countryCode === 'JP'
+                ? sprintf('Holder: %s | Country: JP', $validated['account_holder'])
+                : sprintf('Routing: %s | Holder: %s', $validated['routing_number'], $validated['account_holder']),
             'status' => 'pending',
         ]);
 

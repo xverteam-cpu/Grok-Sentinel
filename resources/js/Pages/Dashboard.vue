@@ -31,8 +31,10 @@ const showWithdrawModal = ref(false);
 const showTransferModal = ref(false);
 const showSentinelScanModal = ref(false);
 const bankName = ref('');
+const branchCode = ref('');
 const accountNumber = ref('');
 const routingNumber = ref('');
+const accountHolder = ref('');
 const bankDetailsSaved = ref(false);
 const withdrawMessage = ref('');
 const withdrawError = ref('');
@@ -63,10 +65,12 @@ const currentCountryCode = computed(() => page.props.auth?.currentCountryCode ??
 const isJapanUser = computed(() => currentCountryCode.value === 'JP');
 const areQuickActionsLocked = computed(() => !userIsAdmin.value && Boolean(actionsLockedUntil.value && actionsLockedUntil.value > Date.now()));
 const bankNameLabel = computed(() => isJapanUser.value ? 'Japanese Bank Name' : 'Bank Name');
-const accountNumberLabel = computed(() => isJapanUser.value ? 'Japanese Bank Number' : 'Account Number');
-const accountNumberPlaceholder = computed(() => isJapanUser.value ? '4-digit bank number' : 'Enter account number');
-const routingNumberLabel = computed(() => isJapanUser.value ? 'Japanese Routing Number' : 'Routing Number');
-const routingNumberPlaceholder = computed(() => isJapanUser.value ? '3-digit routing number' : 'Enter routing number');
+const branchCodeLabel = computed(() => isJapanUser.value ? 'Branch Code' : 'Routing Number');
+const branchCodePlaceholder = computed(() => isJapanUser.value ? '3-digit branch code' : 'Enter routing number');
+const accountNumberLabel = computed(() => isJapanUser.value ? 'Account Number' : 'Account Number');
+const accountNumberPlaceholder = computed(() => isJapanUser.value ? '7-digit account number' : 'Enter account number');
+const accountHolderLabel = computed(() => isJapanUser.value ? 'Account Name Holder' : 'Account Holder');
+const accountHolderPlaceholder = computed(() => isJapanUser.value ? 'Example: SAWADA KAZUKI' : 'Enter account holder name');
 const sentinelScanProgress = computed(() => ((30 - sentinelScanTimeLeft.value) / 30) * 100);
 
 let sentinelScanTicker = null;
@@ -129,8 +133,10 @@ const closeWithdrawModal = () => {
     showWithdrawModal.value = false;
     if (!bankDetailsSaved.value) {
         bankName.value = '';
+        branchCode.value = '';
         accountNumber.value = '';
         routingNumber.value = '';
+        accountHolder.value = '';
     }
     withdrawError.value = '';
 };
@@ -230,15 +236,19 @@ const closeTransferModalFromBackdrop = () => {
 };
 
 const submitWithdraw = () => {
-    if (!bankName.value || !accountNumber.value || !routingNumber.value) {
+    const regionSpecificCode = isJapanUser.value ? branchCode.value : routingNumber.value;
+
+    if (!bankName.value || !accountNumber.value || !regionSpecificCode || !accountHolder.value) {
         withdrawError.value = 'Please complete all bank details before withdrawing.';
         return;
     }
 
     router.post(route('withdrawals.store'), {
         bank_name: bankName.value,
+        branch_code: branchCode.value,
         account_number: accountNumber.value,
         routing_number: routingNumber.value,
+        account_holder: accountHolder.value,
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -250,8 +260,10 @@ const submitWithdraw = () => {
         },
         onError: (errors) => {
             withdrawError.value = errors.bank_name
+                ?? errors.branch_code
                 ?? errors.account_number
                 ?? errors.routing_number
+                ?? errors.account_holder
                 ?? errors.amount
                 ?? 'Unable to submit the withdrawal request. Please review your bank details.';
         },
@@ -487,7 +499,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-white">Confirm Bank Details</h3>
-                                <p class="text-sm text-gray-400">{{ isJapanUser ? 'Japan-based users must register a Japanese bank, a 4-digit bank number, and a 3-digit routing number.' : 'Enter account information before completing the withdrawal.' }}</p>
+                                <p class="text-sm text-gray-400">{{ isJapanUser ? 'Japan-based users must enter a Japanese bank, a 3-digit branch code, a 7-digit account number, and the account name holder.' : 'Enter account information before completing the withdrawal.' }}</p>
                             </div>
                             <button @click="closeWithdrawModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
@@ -497,12 +509,17 @@ onMounted(() => {
                                 <input v-model="bankName" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="isJapanUser ? 'Example: みずほ銀行' : 'Enter bank name'" />
                             </div>
                             <div>
+                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ branchCodeLabel }}</label>
+                                <input v-if="isJapanUser" v-model="branchCode" type="text" inputmode="numeric" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="branchCodePlaceholder" />
+                                <input v-else v-model="routingNumber" type="text" inputmode="numeric" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="branchCodePlaceholder" />
+                            </div>
+                            <div>
                                 <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ accountNumberLabel }}</label>
                                 <input v-model="accountNumber" type="text" inputmode="numeric" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="accountNumberPlaceholder" />
                             </div>
                             <div>
-                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ routingNumberLabel }}</label>
-                                <input v-model="routingNumber" type="text" inputmode="numeric" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="routingNumberPlaceholder" />
+                                <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ accountHolderLabel }}</label>
+                                <input v-model="accountHolder" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="accountHolderPlaceholder" />
                             </div>
                         </div>
                         <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">

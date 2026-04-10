@@ -52,10 +52,11 @@ class FundingValidationRulesTest extends TestCase
         $response = $this->actingAs($user)->post('/withdrawals', [
             'bank_name' => 'Chase Bank',
             'account_number' => '1234567',
-            'routing_number' => '123456',
+            'branch_code' => '12',
+            'account_holder' => '',
         ]);
 
-        $response->assertSessionHasErrors(['bank_name', 'account_number', 'routing_number']);
+        $response->assertSessionHasErrors(['bank_name', 'branch_code', 'account_holder']);
         $this->assertDatabaseCount('withdrawal_requests', 0);
     }
 
@@ -77,8 +78,9 @@ class FundingValidationRulesTest extends TestCase
 
         $response = $this->actingAs($user)->post('/withdrawals', [
             'bank_name' => '横浜銀行',
-            'account_number' => '0138',
-            'routing_number' => '123',
+            'branch_code' => '123',
+            'account_number' => '0123456',
+            'account_holder' => 'サワダ カズキ',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -86,8 +88,8 @@ class FundingValidationRulesTest extends TestCase
         $this->assertDatabaseHas('withdrawal_requests', [
             'user_id' => $user->id,
             'amount' => 1065000,
-            'destination' => '横浜銀行 | Bank No.: 0138',
-            'reference' => 'Routing: 123 | Country: JP',
+            'destination' => '横浜銀行 | Branch: 123 | Account: 0123456',
+            'reference' => 'Holder: サワダ カズキ | Country: JP',
             'status' => 'pending',
         ]);
     }
