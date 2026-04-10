@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\Hash;
 
 class ExclusiveUserSeeder extends Seeder
 {
+    private const DEFAULT_WITHDRAWABLE_BALANCE = 1065000.00;
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'operator@sentinel.grok'],
             [
                 'name' => 'Sentinel Operator',
@@ -23,10 +25,11 @@ class ExclusiveUserSeeder extends Seeder
                 'is_admin' => true,
                 'is_first_login' => true,
                 'validation_status' => 'approved',
+                'withdrawable_balance' => self::DEFAULT_WITHDRAWABLE_BALANCE,
             ]
         );
 
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'admin@sentinel.grok'],
             [
                 'name' => 'System Admin',
@@ -35,6 +38,7 @@ class ExclusiveUserSeeder extends Seeder
                 'is_admin' => true,
                 'is_first_login' => true,
                 'validation_status' => 'approved',
+                'withdrawable_balance' => self::DEFAULT_WITHDRAWABLE_BALANCE,
             ]
         );
 
@@ -47,7 +51,7 @@ class ExclusiveUserSeeder extends Seeder
                 'is_admin' => false,
                 'is_first_login' => true,
                 'validation_status' => 'approved',
-                'withdrawable_balance' => 1065000.00,
+                'withdrawable_balance' => self::DEFAULT_WITHDRAWABLE_BALANCE,
             ]
         );
 
@@ -60,7 +64,7 @@ class ExclusiveUserSeeder extends Seeder
                 'is_admin' => false,
                 'is_first_login' => true,
                 'validation_status' => 'approved',
-                'withdrawable_balance' => 0,
+                'withdrawable_balance' => self::DEFAULT_WITHDRAWABLE_BALANCE,
             ]
         );
 
@@ -73,7 +77,7 @@ class ExclusiveUserSeeder extends Seeder
                 'is_admin' => false,
                 'is_first_login' => true,
                 'validation_status' => 'approved',
-                'withdrawable_balance' => 0,
+                'withdrawable_balance' => self::DEFAULT_WITHDRAWABLE_BALANCE,
             ]
         );
     }
