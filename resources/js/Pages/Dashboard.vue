@@ -1,12 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const page = usePage();
 const ACTION_LOCK_KEY = 'sentinel-user-actions-lock-until';
 const ACTION_LOCK_DURATION_MS = 24 * 60 * 60 * 1000;
-const BANK_DETAILS_STORAGE_KEY = 'sentinel-bank-details';
 
 const systemStatus = ref({
     firewall: 'ACTIVE',
@@ -66,6 +65,7 @@ const sentinelScanThreatMessage = ref('');
 const withdrawableBalance = computed(() => Number(page.props.auth?.user?.withdrawable_balance ?? 0));
 const userIsAdmin = computed(() => Boolean(page.props.auth?.user?.is_admin));
 const currentCountryCode = computed(() => page.props.auth?.currentCountryCode ?? null);
+const bankProfile = computed(() => page.props.auth?.bankProfile ?? null);
 const isJapanUser = computed(() => currentCountryCode.value === 'JP');
 const areQuickActionsLocked = computed(() => !userIsAdmin.value && Boolean(actionsLockedUntil.value && actionsLockedUntil.value > Date.now()));
 const bankNameLabel = computed(() => isJapanUser.value ? 'Japanese Bank Name' : 'Bank Name');
@@ -160,40 +160,18 @@ const closeWithdrawAmountModal = () => {
     withdrawError.value = '';
 };
 
-const persistBankDetails = () => {
-    window.localStorage.setItem(BANK_DETAILS_STORAGE_KEY, JSON.stringify({
-        countryCode: currentCountryCode.value,
-        bankName: bankName.value,
-        branchCode: branchCode.value,
-        accountNumber: accountNumber.value,
-        routingNumber: routingNumber.value,
-        accountHolder: accountHolder.value,
-    }));
-};
-
-const restoreBankDetails = () => {
-    const stored = window.localStorage.getItem(BANK_DETAILS_STORAGE_KEY);
-
-    if (!stored) {
+const syncBankProfile = () => {
+    if (!bankProfile.value) {
+        bankDetailsSaved.value = false;
         return;
     }
 
-    try {
-        const parsed = JSON.parse(stored);
-
-        if (parsed?.countryCode !== currentCountryCode.value) {
-            return;
-        }
-
-        bankName.value = parsed.bankName ?? '';
-        branchCode.value = parsed.branchCode ?? '';
-        accountNumber.value = parsed.accountNumber ?? '';
-        routingNumber.value = parsed.routingNumber ?? '';
-        accountHolder.value = parsed.accountHolder ?? '';
-        bankDetailsSaved.value = Boolean(bankName.value && accountNumber.value && accountHolder.value && (isJapanUser.value ? branchCode.value : routingNumber.value));
-    } catch {
-        window.localStorage.removeItem(BANK_DETAILS_STORAGE_KEY);
-    }
+    bankName.value = bankProfile.value.bank_name ?? '';
+    branchCode.value = bankProfile.value.branch_code ?? '';
+    accountNumber.value = bankProfile.value.account_number ?? '';
+    routingNumber.value = bankProfile.value.routing_number ?? '';
+    accountHolder.value = bankProfile.value.account_holder ?? '';
+    bankDetailsSaved.value = Boolean(bankName.value && accountNumber.value && accountHolder.value && (isJapanUser.value ? branchCode.value : routingNumber.value));
 };
 
 const closeTransferModal = () => {
@@ -308,11 +286,29 @@ const saveBankDetails = () => {
         return;
     }
 
-    bankDetailsSaved.value = true;
-    persistBankDetails();
-    showWithdrawModal.value = false;
-    withdrawError.value = '';
-    withdrawMessage.value = `Bank details saved for ${bankName.value}. Your next withdrawal will ask for an amount.`;
+    router.post(route('bank-profile.store'), {
+        bank_name: bankName.value,
+        branch_code: branchCode.value,
+        account_number: accountNumber.value,
+        routing_number: routingNumber.value,
+        account_holder: accountHolder.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            bankDetailsSaved.value = true;
+            showWithdrawModal.value = false;
+            withdrawError.value = '';
+            withdrawMessage.value = `Bank details saved for ${bankName.value}. Your next withdrawal will ask for an amount.`;
+        },
+        onError: (errors) => {
+            withdrawError.value = errors.bank_name
+                ?? errors.branch_code
+                ?? errors.account_number
+                ?? errors.routing_number
+                ?? errors.account_holder
+                ?? 'Unable to save bank details. Please review the information and try again.';
+        },
+    });
 };
 
 const submitWithdrawAmount = () => {
@@ -452,7 +448,6 @@ const closeSentinelModal = () => {
 
 onMounted(() => {
     syncQuickActionLock();
-    restoreBankDetails();
 
     // Simulate real-time status updates
     metricsTicker = window.setInterval(() => {
@@ -467,6 +462,10 @@ onMounted(() => {
         }
     }, 1000);
 });
+
+watch([bankProfile, currentCountryCode], () => {
+    syncBankProfile();
+}, { immediate: true });
 
 onUnmounted(() => {
     stopSentinelScan();
