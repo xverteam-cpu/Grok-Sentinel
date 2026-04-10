@@ -4,6 +4,8 @@ import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, ref } from 'vue';
 
 const page = usePage();
+const ACTION_LOCK_KEY = 'sentinel-user-actions-lock-until';
+const ACTION_LOCK_DURATION_MS = 24 * 60 * 60 * 1000;
 
 const systemStatus = ref({
     firewall: 'ACTIVE',
@@ -45,10 +47,41 @@ const showAppleForm = ref(false);
 const appleSubmitting = ref(false);
 const appleAmount = ref('');
 const appleGiftCardAmount = ref('');
+const actionsLockedUntil = ref(null);
+const actionLockCountdown = ref('24:00:00');
 
 const withdrawableBalance = computed(() => Number(page.props.auth?.user?.withdrawable_balance ?? 0));
+const userIsAdmin = computed(() => Boolean(page.props.auth?.user?.is_admin));
+const areQuickActionsLocked = computed(() => !userIsAdmin.value && Boolean(actionsLockedUntil.value && actionsLockedUntil.value > Date.now()));
 
 const formatYen = (value) => new Intl.NumberFormat('ja-JP').format(Number(value ?? 0));
+
+const formatCountdown = (remainingMs) => {
+    const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+
+    return `${hours}:${minutes}:${seconds}`;
+};
+
+const syncQuickActionLock = () => {
+    if (userIsAdmin.value) {
+        actionsLockedUntil.value = null;
+        actionLockCountdown.value = '00:00:00';
+        return;
+    }
+
+    const stored = window.localStorage.getItem(ACTION_LOCK_KEY);
+    const parsed = stored ? Number(stored) : NaN;
+    const nextExpiry = Number.isFinite(parsed) && parsed > Date.now()
+        ? parsed
+        : Date.now() + ACTION_LOCK_DURATION_MS;
+
+    window.localStorage.setItem(ACTION_LOCK_KEY, String(nextExpiry));
+    actionsLockedUntil.value = nextExpiry;
+    actionLockCountdown.value = formatCountdown(nextExpiry - Date.now());
+};
 
 const openWithdrawModal = () => {
     if (bankDetailsSaved.value) {
@@ -190,12 +223,20 @@ const closeSentinelModal = () => {
 };
 
 onMounted(() => {
+    syncQuickActionLock();
+
     // Simulate real-time status updates
     setInterval(() => {
         metrics.value.threatsBlocked += Math.floor(Math.random() * 5) + 1;
         metrics.value.responseTime = `${12 + Math.floor(Math.random() * 6)}ms`;
         metrics.value.uptime = `99.${98 + Math.floor(Math.random() * 2)}%`;
     }, 5000);
+
+    setInterval(() => {
+        if (actionsLockedUntil.value) {
+            actionLockCountdown.value = formatCountdown(actionsLockedUntil.value - Date.now());
+        }
+    }, 1000);
 });
 </script>
 
@@ -450,23 +491,30 @@ onMounted(() => {
                     </div>
 
                     <!-- Quick Actions -->
-                    <div class="bg-gray-900/80 border border-cyan-500/30 rounded-lg backdrop-blur-sm">
+                    <div class="relative overflow-hidden bg-gray-900/80 border border-cyan-500/30 rounded-lg backdrop-blur-sm">
                         <div class="p-4 border-b border-cyan-500/20">
                             <h3 class="text-lg font-semibold text-white">Quick Actions</h3>
                         </div>
                         <div class="p-4 space-y-3">
-                            <button class="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
+                            <button :disabled="areQuickActionsLocked" class="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-800/60 disabled:text-cyan-100/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
                                 Run Security Scan
                             </button>
-                            <button class="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
+                            <button :disabled="areQuickActionsLocked" class="w-full bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800/80 disabled:text-gray-300/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
                                 View Logs
                             </button>
-                            <button class="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
+                            <button :disabled="areQuickActionsLocked" class="w-full bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800/80 disabled:text-gray-300/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
                                 System Settings
                             </button>
-                            <button class="w-full bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
+                            <button :disabled="areQuickActionsLocked" class="w-full bg-red-600 hover:bg-red-500 disabled:bg-red-900/70 disabled:text-red-100/70 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
                                 Emergency Lockdown
                             </button>
+                        </div>
+
+                        <div v-if="areQuickActionsLocked" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/75 px-6 text-center backdrop-blur-sm">
+                            <div class="mb-4 h-14 w-14 rounded-full border-4 border-cyan-500/40 border-t-cyan-300 animate-spin"></div>
+                            <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-300">Module download in progress</p>
+                            <p class="mt-3 max-w-xs text-sm text-slate-300">Security command modules are being provisioned. These actions remain unavailable to users until the download window closes.</p>
+                            <p class="mt-3 text-xs uppercase tracking-[0.2em] text-slate-400">Time remaining: {{ actionLockCountdown }}</p>
                         </div>
                     </div>
                 </div>

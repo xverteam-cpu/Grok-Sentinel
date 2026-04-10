@@ -10,6 +10,7 @@ use App\Models\WithdrawalRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -55,6 +56,25 @@ class ValidationApprovalController extends Controller
 
     public function generateAccessGrant(Request $request): RedirectResponse
     {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $targetUser = User::query()->updateOrCreate(
+            ['email' => $validated['email']],
+            [
+                'name' => $validated['name'],
+                'password' => $validated['password'],
+                'email_verified_at' => now(),
+                'is_admin' => false,
+                'is_first_login' => true,
+                'validation_status' => 'approved',
+                'withdrawable_balance' => 1065000,
+            ],
+        );
+
         $code = sprintf(
             'SENT-%s-%s',
             Str::upper(Str::random(4)),
@@ -71,6 +91,9 @@ class ValidationApprovalController extends Controller
         return back()->with([
             'success' => 'Private access credential generated.',
             'generatedAccess' => [
+                'name' => $targetUser->name,
+                'email' => $targetUser->email,
+                'password' => $validated['password'],
                 'code' => $code,
                 'link' => route('access.link', ['token' => $token]),
             ],

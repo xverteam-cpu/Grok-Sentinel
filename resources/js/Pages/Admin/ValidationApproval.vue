@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router, usePage } from '@inertiajs/vue3'
+import { Head, router, useForm, usePage } from '@inertiajs/vue3'
 
 defineProps({
   pendingValidations: {
@@ -19,6 +19,12 @@ defineProps({
 const page = usePage()
 const generatedAccess = page.props.flash?.generatedAccess
 
+const accessForm = useForm({
+  name: '',
+  email: '',
+  password: '',
+})
+
 const decideValidation = (id, action) => {
   router.patch(`/admin/validations/${id}`, { action })
 }
@@ -28,7 +34,12 @@ const decideWithdrawal = (id, action) => {
 }
 
 const generateAccessGrant = () => {
-  router.post(route('admin.access-grants.store'))
+  accessForm.post(route('admin.access-grants.store'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      accessForm.reset('password')
+    },
+  })
 }
 </script>
 
@@ -43,22 +54,59 @@ const generateAccessGrant = () => {
       </header>
 
       <section class="rounded-2xl border border-amber-500/20 bg-slate-900/70 p-6">
-        <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h2 class="text-lg font-semibold text-amber-300">Private Access Control</h2>
-            <p class="mt-1 text-sm text-slate-300">Generate a one-device access code or link. The first device that redeems it becomes the only allowed device for that credential.</p>
-            <p class="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">Active device grants: {{ activeAccessGrantsCount }}</p>
-          </div>
+        <div>
+          <h2 class="text-lg font-semibold text-amber-300">Private Access Control</h2>
+          <p class="mt-1 text-sm text-slate-300">Create the user credentials first, then generate a one-device access link. When the user opens the link, they still need to log in using the credentials you entered here.</p>
+          <p class="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">Active device grants: {{ activeAccessGrantsCount }}</p>
+        </div>
 
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div>
+            <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">User Name</label>
+            <input
+              v-model="accessForm.name"
+              type="text"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
+              placeholder="User full name"
+            >
+            <p v-if="accessForm.errors.name" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.name }}</p>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Login Email</label>
+            <input
+              v-model="accessForm.email"
+              type="email"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
+              placeholder="user@example.com"
+            >
+            <p v-if="accessForm.errors.email" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.email }}</p>
+          </div>
+          <div>
+            <label class="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Temporary Password</label>
+            <input
+              v-model="accessForm.password"
+              type="text"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400"
+              placeholder="Minimum 8 characters"
+            >
+            <p v-if="accessForm.errors.password" class="mt-2 text-sm text-rose-400">{{ accessForm.errors.password }}</p>
+          </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
           <button
-            class="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400"
+            class="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="accessForm.processing"
             @click="generateAccessGrant"
           >
-            Generate Access Code
+            {{ accessForm.processing ? 'Generating...' : 'Generate Access Link' }}
           </button>
         </div>
 
         <div v-if="generatedAccess" class="mt-4 rounded-xl border border-amber-500/30 bg-slate-950/80 p-4 text-sm text-slate-200">
+          <p><span class="text-slate-400">Name:</span> {{ generatedAccess.name }}</p>
+          <p class="mt-2"><span class="text-slate-400">Email:</span> {{ generatedAccess.email }}</p>
+          <p class="mt-2"><span class="text-slate-400">Password:</span> {{ generatedAccess.password }}</p>
           <p><span class="text-slate-400">Code:</span> {{ generatedAccess.code }}</p>
           <p class="mt-2 break-all"><span class="text-slate-400">Link:</span> {{ generatedAccess.link }}</p>
         </div>
