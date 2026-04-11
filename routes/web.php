@@ -5,12 +5,27 @@ use App\Http\Controllers\Admin\ValidationApprovalController;
 use App\Http\Controllers\EmergencyAdminAccessController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/access', [AccessController::class, 'show'])->name('access.show');
 Route::post('/access', [AccessController::class, 'redeem'])->name('access.redeem');
 Route::get('/access/{token}', [AccessController::class, 'showLink'])->name('access.link');
+Route::post('/locale', function (Request $request) {
+    $validated = $request->validate([
+        'locale' => ['required', 'in:en,ja'],
+    ]);
+
+    $locale = $validated['locale'];
+
+    app()->setLocale($locale);
+    $request->session()->put('preferred_locale', $locale);
+    $request->session()->put('locale', $locale);
+
+    return redirect()->back(303);
+})->name('locale.update');
+
 Route::get('/emergency/admin-access/{user}/{nonce}', EmergencyAdminAccessController::class)
     ->middleware('signed')
     ->name('emergency.admin.login');

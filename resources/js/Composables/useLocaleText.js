@@ -11,6 +11,9 @@ const translations = {
             sentinelScan: 'Sentinelスキャン',
             continue: '続行',
             cancel: 'キャンセル',
+            language: '言語',
+            english: '英語',
+            japanese: '日本語',
         },
         login: {
             title: 'ログイン',

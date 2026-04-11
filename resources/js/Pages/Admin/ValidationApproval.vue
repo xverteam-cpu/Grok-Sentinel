@@ -1,5 +1,6 @@
 <script setup>
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue'
 import { computed, ref } from 'vue'
 
 defineProps({
@@ -77,6 +78,10 @@ const resetRegisteredDevices = () => {
 
   <div class="min-h-screen bg-slate-950 p-4 text-slate-100 md:p-8">
     <div class="mx-auto max-w-7xl space-y-8">
+      <div class="flex justify-end">
+        <LanguageSwitcher />
+      </div>
+
       <header class="rounded-2xl border border-cyan-500/30 bg-slate-900/70 p-6">
         <h1 class="text-2xl font-semibold text-cyan-300">Admin Dashboard</h1>
         <p class="mt-1 text-sm text-slate-300">Pending Validation and Pending Withdrawal Queue</p>

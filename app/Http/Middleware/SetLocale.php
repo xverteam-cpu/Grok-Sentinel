@@ -22,6 +22,14 @@ class SetLocale
 
     public function handle(Request $request, Closure $next)
     {
+        if (session()->has('preferred_locale')) {
+            $locale = session()->get('preferred_locale');
+            App::setLocale($locale);
+            session()->put('locale', $locale);
+
+            return $next($request);
+        }
+
         if ($request->user()) {
             $countryCode = LoginSession::query()
                 ->where('user_id', $request->user()->id)

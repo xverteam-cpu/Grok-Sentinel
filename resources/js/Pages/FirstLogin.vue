@@ -1,5 +1,9 @@
 <template>
     <div class="first-login-page">
+        <div class="language-switcher-shell">
+            <LanguageSwitcher />
+        </div>
+
         <div v-if="showSecurityFeed" class="access-box">
             <div class="logo">
                 𝕏 <span :class="{ 'logo-complete': scanningComplete }">GROK</span> SENTINEL
@@ -55,6 +59,7 @@
 </template>
 
 <script>
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import { usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref, computed } from 'vue';
 import axios from 'axios';
@@ -79,6 +84,10 @@ const randomLogs = [
 const SECURITY_FEED_DURATION_SECONDS = 120;
 
 export default {
+    components: {
+        LanguageSwitcher,
+    },
+
     setup() {
         const { t } = useLocaleText();
         const page = usePage();
@@ -218,6 +227,13 @@ export default {
     color: #fff;
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     padding: 1.5rem;
+}
+
+.language-switcher-shell {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 30;
 }
 
 .first-login-page::before {

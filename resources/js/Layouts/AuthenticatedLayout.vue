@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
@@ -69,7 +70,8 @@ function initBackground() {
                         </div>
                     </div>
 
-                    <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                    <div class="hidden sm:ms-6 sm:flex sm:items-center sm:gap-4">
+                        <LanguageSwitcher />
                         <div class="relative ms-3">
                             <div class="text-cyan-400">{{ $page.props.auth.user.name }}</div>
                         </div>
@@ -110,6 +112,9 @@ function initBackground() {
                         </div>
 
                         <div class="mt-3 space-y-1">
+                            <div class="px-4 pb-3">
+                                <LanguageSwitcher />
+                            </div>
                             <ResponsiveNavLink :href="route('profile.edit')" class="text-white">
                                 {{ t('common.profile', 'Profile') }}
                             </ResponsiveNavLink>

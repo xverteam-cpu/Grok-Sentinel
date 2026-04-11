@@ -1,5 +1,6 @@
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import { computed } from 'vue';
 import { useLocaleText } from '@/Composables/useLocaleText';
 
@@ -32,6 +33,10 @@ const submit = () => {
     <Head :title="t('access.title', 'Private Access')" />
 
     <div class="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
+        <div class="mx-auto mb-6 flex max-w-md justify-end">
+            <LanguageSwitcher />
+        </div>
+
         <div class="mx-auto max-w-md rounded-3xl border border-cyan-500/30 bg-slate-900/80 p-8 shadow-2xl shadow-cyan-950/40">
             <div class="mb-8 space-y-3 text-center">
                 <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/40 bg-cyan-500/10">

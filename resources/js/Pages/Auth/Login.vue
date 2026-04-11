@@ -1,5 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import { onMounted, ref } from 'vue';
 import { useLocaleText } from '@/Composables/useLocaleText';
 
@@ -89,6 +90,10 @@ onMounted(() => {
     <Head :title="t('login.title', 'Log in')" />
 
     <canvas id="bg-canvas"></canvas>
+
+    <div class="language-switcher-shell">
+        <LanguageSwitcher />
+    </div>
 
     <div class="scanning-overlay" id="overlay">
         <div class="scan-line"></div>
@@ -184,6 +189,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.language-switcher-shell {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 20;
 }
 
 /* Background overlay for readability */
