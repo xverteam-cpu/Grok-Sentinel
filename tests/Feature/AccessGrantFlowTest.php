@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\AccessController;
 use App\Models\AccessGrant;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,6 +48,8 @@ class AccessGrantFlowTest extends TestCase
     {
         $token = 'sentinel-link-token';
 
+        Carbon::setTestNow('2026-04-11 12:00:00');
+
         AccessGrant::query()->create([
             'code_hash' => hash('sha256', 'SENT-ABCD-EFGH'),
             'link_token_hash' => hash('sha256', $token),
@@ -67,7 +70,10 @@ class AccessGrantFlowTest extends TestCase
         $this->assertNotNull($grant->device_id_hash);
         $this->assertNotNull($grant->user_agent_hash);
         $this->assertNotNull($grant->bound_at);
+        $this->assertTrue($grant->expires_at->equalTo(now()->addDays(AccessController::TRUSTED_DEVICE_DAYS)));
         $this->assertTrue(session()->has('private_access_granted'));
+
+        Carbon::setTestNow();
     }
 
     public function test_login_page_is_reachable_immediately_after_access_is_granted_in_same_session(): void
@@ -97,6 +103,7 @@ class AccessGrantFlowTest extends TestCase
         $token = 'sentinel-link-token';
 
         config()->set('session.secure', false);
+        Carbon::setTestNow('2026-04-11 12:00:00');
 
         AccessGrant::query()->create([
             'code_hash' => hash('sha256', 'SENT-ABCD-EFGH'),
@@ -119,6 +126,9 @@ class AccessGrantFlowTest extends TestCase
 
         $this->assertNotNull($deviceCookie);
         $this->assertFalse($deviceCookie->isSecure());
+        $this->assertSame(now()->addDays(AccessController::TRUSTED_DEVICE_DAYS)->timestamp, $deviceCookie->getExpiresTime());
+
+        Carbon::setTestNow();
     }
 
     public function test_same_device_remains_valid_when_user_agent_changes(): void

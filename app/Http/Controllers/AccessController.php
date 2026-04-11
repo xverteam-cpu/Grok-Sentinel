@@ -13,13 +13,19 @@ use Inertia\Response;
 class AccessController extends Controller
 {
     public const DEVICE_COOKIE = 'sentinel_device_id';
+    public const TRUSTED_DEVICE_DAYS = 30;
+
+    public static function trustedDeviceExpiry()
+    {
+        return now()->addDays(self::TRUSTED_DEVICE_DAYS);
+    }
 
     public static function queueDeviceCookie(Request $request, string $deviceId): void
     {
         Cookie::queue(Cookie::make(
             self::DEVICE_COOKIE,
             $deviceId,
-            60 * 24 * 365,
+            60 * 24 * self::TRUSTED_DEVICE_DAYS,
             config('session.path', '/'),
             config('session.domain'),
             config('session.secure') ?? $request->isSecure(),
@@ -102,9 +108,10 @@ class AccessController extends Controller
         }
 
         $grant->last_used_at = now();
+        $grant->expires_at = self::trustedDeviceExpiry();
         $grant->save();
 
-    self::queueDeviceCookie($request, $deviceId);
+        self::queueDeviceCookie($request, $deviceId);
 
         $request->session()->put('private_access_granted', true);
 

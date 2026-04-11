@@ -25,14 +25,15 @@ class EmergencyAdminAccessController extends Controller
         $deviceHash = hash('sha256', $deviceId);
         $userAgentHash = hash('sha256', (string) $request->userAgent());
 
-        AccessGrant::query()->firstOrCreate(
+        AccessGrant::query()->updateOrCreate(
             [
                 'device_id_hash' => $deviceHash,
-                'user_agent_hash' => $userAgentHash,
             ],
             [
+                'user_agent_hash' => $userAgentHash,
                 'bound_at' => now(),
                 'last_used_at' => now(),
+                'expires_at' => AccessController::trustedDeviceExpiry(),
                 'created_by' => $user->id,
             ],
         );
