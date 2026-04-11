@@ -31,7 +31,7 @@ class AccessController extends Controller
 
     public function show(Request $request): Response|RedirectResponse
     {
-        if (self::hasValidDeviceAccess($request)) {
+        if (self::hasPrivateAccess($request)) {
             return redirect()->route('login');
         }
 
@@ -123,5 +123,14 @@ class AccessController extends Controller
             ->active()
             ->where('device_id_hash', hash('sha256', $deviceId))
             ->exists();
+    }
+
+    public static function hasPrivateAccess(Request $request): bool
+    {
+        if ($request->session()->get('private_access_granted')) {
+            return true;
+        }
+
+        return self::hasValidDeviceAccess($request);
     }
 }

@@ -19,7 +19,7 @@ class RequirePrivateAccess
             return $next($request);
         }
 
-        if (AccessController::hasValidDeviceAccess($request)) {
+        if (AccessController::hasPrivateAccess($request)) {
             return $next($request);
         }
 

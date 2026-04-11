@@ -70,6 +70,28 @@ class AccessGrantFlowTest extends TestCase
         $this->assertTrue(session()->has('private_access_granted'));
     }
 
+    public function test_login_page_is_reachable_immediately_after_access_is_granted_in_same_session(): void
+    {
+        $token = 'sentinel-link-token';
+
+        AccessGrant::query()->create([
+            'code_hash' => hash('sha256', 'SENT-ABCD-EFGH'),
+            'link_token_hash' => hash('sha256', $token),
+            'created_by' => User::factory()->create(['is_admin' => true])->id,
+        ]);
+
+        $response = $this
+            ->withHeader('User-Agent', 'PHPUnit Browser')
+            ->post('/access', [
+                'token' => $token,
+            ]);
+
+        $response->assertRedirect(route('login'));
+
+        $this->get(route('login'))
+            ->assertOk();
+    }
+
     public function test_http_access_flow_sets_non_secure_device_cookie_for_same_device_reuse(): void
     {
         $token = 'sentinel-link-token';
