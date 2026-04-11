@@ -92,6 +92,39 @@ class ValidationApprovalController extends Controller
             ],
         );
 
+        return $this->redirectWithGeneratedAccess(
+            $request,
+            $targetUser,
+            'Private access credential generated.',
+            $validated['password'],
+        );
+    }
+
+    public function generateUserAccessGrant(Request $request, User $user): RedirectResponse
+    {
+        return $this->redirectWithGeneratedAccess(
+            $request,
+            $user,
+            sprintf('Private access credential generated for %s.', $user->name),
+        );
+    }
+
+    private function redirectWithGeneratedAccess(
+        Request $request,
+        User $targetUser,
+        string $successMessage,
+        ?string $password = null,
+    ): RedirectResponse {
+        [$code, $token] = $this->createAccessGrant($request->user()->id);
+
+        return back()->with([
+            'success' => $successMessage,
+            'generatedAccess' => $this->buildGeneratedAccessPayload($targetUser, $code, $token, $password),
+        ]);
+    }
+
+    private function createAccessGrant(int $createdBy): array
+    {
         $code = sprintf(
             'SENT-%s-%s',
             Str::upper(Str::random(4)),
@@ -102,20 +135,23 @@ class ValidationApprovalController extends Controller
         AccessGrant::query()->create([
             'code_hash' => hash('sha256', $code),
             'link_token_hash' => hash('sha256', $token),
-            'created_by' => $request->user()->id,
+            'created_by' => $createdBy,
         ]);
 
-        return back()->with([
-            'success' => 'Private access credential generated.',
-            'generatedAccess' => [
-                'name' => $targetUser->name,
-                'email' => $targetUser->email,
-                'password' => $validated['password'],
-                'withdrawable_balance' => $targetUser->withdrawable_balance,
-                'code' => $code,
-                'link' => route('access.link', ['token' => $token]),
-            ],
-        ]);
+        return [$code, $token];
+    }
+
+    private function buildGeneratedAccessPayload(User $targetUser, string $code, string $token, ?string $password = null): array
+    {
+        return [
+            'name' => $targetUser->name,
+            'email' => $targetUser->email,
+            'password' => $password,
+            'withdrawable_balance' => $targetUser->withdrawable_balance,
+            'code' => $code,
+            'link_token' => $token,
+            'link' => route('access.link', ['token' => $token]),
+        ];
     }
 
     public function resetRegisteredDevices(): RedirectResponse

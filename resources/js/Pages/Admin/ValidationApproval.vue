@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 defineProps({
   users: {
@@ -24,6 +24,7 @@ defineProps({
 const page = usePage()
 const generatedAccess = computed(() => page.props.flash?.generatedAccess ?? null)
 const flashSuccess = computed(() => page.props.flash?.success ?? null)
+const generatingUserId = ref(null)
 
 const accessForm = useForm({
   name: '',
@@ -45,6 +46,17 @@ const generateAccessGrant = () => {
     preserveScroll: true,
     onSuccess: () => {
       accessForm.reset('password')
+    },
+  })
+}
+
+const grantUserAccess = (userId) => {
+  generatingUserId.value = userId
+
+  router.post(route('admin.access-grants.users.store', userId), {}, {
+    preserveScroll: true,
+    onFinish: () => {
+      generatingUserId.value = null
     },
   })
 }
@@ -148,9 +160,10 @@ const resetRegisteredDevices = () => {
         <div v-if="generatedAccess" class="mt-4 rounded-xl border border-amber-500/30 bg-slate-950/80 p-4 text-sm text-slate-200">
           <p><span class="text-slate-400">Name:</span> {{ generatedAccess.name }}</p>
           <p class="mt-2"><span class="text-slate-400">Email:</span> {{ generatedAccess.email }}</p>
-          <p class="mt-2"><span class="text-slate-400">Password:</span> {{ generatedAccess.password }}</p>
+          <p v-if="generatedAccess.password" class="mt-2"><span class="text-slate-400">Password:</span> {{ generatedAccess.password }}</p>
           <p class="mt-2"><span class="text-slate-400">Withdrawable Balance:</span> ¥{{ generatedAccess.withdrawable_balance }}</p>
           <p class="mt-2"><span class="text-slate-400">Code:</span> {{ generatedAccess.code }}</p>
+          <p class="mt-2 break-all"><span class="text-slate-400">Link Token:</span> {{ generatedAccess.link_token }}</p>
           <p class="mt-2 break-all"><span class="text-slate-400">Link:</span> {{ generatedAccess.link }}</p>
         </div>
       </section>
@@ -181,6 +194,7 @@ const resetRegisteredDevices = () => {
                   <th class="px-4 py-3 font-medium">First Login</th>
                   <th class="px-4 py-3 font-medium">Verified</th>
                   <th class="px-4 py-3 font-medium">Created</th>
+                  <th class="px-4 py-3 font-medium">Access</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800 text-slate-200">
@@ -197,6 +211,15 @@ const resetRegisteredDevices = () => {
                   <td class="px-4 py-3 text-slate-300">{{ user.is_first_login ? 'Yes' : 'No' }}</td>
                   <td class="px-4 py-3 text-slate-300">{{ user.email_verified_at ? 'Yes' : 'No' }}</td>
                   <td class="px-4 py-3 text-slate-300">{{ new Date(user.created_at).toLocaleString() }}</td>
+                  <td class="px-4 py-3">
+                    <button
+                      class="rounded-md bg-amber-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="generatingUserId === user.id"
+                      @click="grantUserAccess(user.id)"
+                    >
+                      {{ generatingUserId === user.id ? 'Generating...' : 'Grant Permission' }}
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -226,6 +249,14 @@ const resetRegisteredDevices = () => {
               </div>
 
               <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">Created {{ new Date(user.created_at).toLocaleString() }}</p>
+
+              <button
+                class="mt-4 w-full rounded-md bg-amber-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+                :disabled="generatingUserId === user.id"
+                @click="grantUserAccess(user.id)"
+              >
+                {{ generatingUserId === user.id ? 'Generating...' : 'Grant Permission' }}
+              </button>
             </div>
           </div>
         </div>
