@@ -70,6 +70,57 @@ class AccessGrantFlowTest extends TestCase
         $this->assertTrue(session()->has('private_access_granted'));
     }
 
+    public function test_http_access_flow_sets_non_secure_device_cookie_for_same_device_reuse(): void
+    {
+        $token = 'sentinel-link-token';
+
+        config()->set('session.secure', false);
+
+        AccessGrant::query()->create([
+            'code_hash' => hash('sha256', 'SENT-ABCD-EFGH'),
+            'link_token_hash' => hash('sha256', $token),
+            'created_by' => User::factory()->create(['is_admin' => true])->id,
+        ]);
+
+        $response = $this
+            ->withServerVariables([
+                'HTTPS' => 'off',
+                'REQUEST_SCHEME' => 'http',
+            ])
+            ->withHeader('User-Agent', 'PHPUnit Browser')
+            ->post('/access', [
+                'token' => $token,
+            ]);
+
+        $deviceCookie = collect($response->headers->getCookies())
+            ->first(fn ($cookie) => $cookie->getName() === AccessController::DEVICE_COOKIE);
+
+        $this->assertNotNull($deviceCookie);
+        $this->assertFalse($deviceCookie->isSecure());
+    }
+
+    public function test_same_device_remains_valid_when_user_agent_changes(): void
+    {
+        $token = 'sentinel-link-token';
+        $deviceId = 'device-one';
+
+        AccessGrant::query()->create([
+            'code_hash' => hash('sha256', 'SENT-ABCD-EFGH'),
+            'link_token_hash' => hash('sha256', $token),
+            'device_id_hash' => hash('sha256', $deviceId),
+            'user_agent_hash' => hash('sha256', 'Old Browser'),
+            'bound_at' => now(),
+            'created_by' => User::factory()->create(['is_admin' => true])->id,
+        ]);
+
+        $response = $this
+            ->withHeader('User-Agent', 'Updated Browser')
+            ->withCookie(AccessController::DEVICE_COOKIE, $deviceId)
+            ->get('/access');
+
+        $response->assertRedirect(route('login'));
+    }
+
     public function test_bound_access_link_cannot_be_claimed_by_another_device(): void
     {
         $token = 'sentinel-link-token';

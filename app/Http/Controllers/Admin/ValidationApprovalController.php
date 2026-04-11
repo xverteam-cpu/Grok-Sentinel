@@ -20,6 +20,20 @@ class ValidationApprovalController extends Controller
 {
     public function index(): Response
     {
+        $users = User::query()
+            ->orderByDesc('created_at')
+            ->get([
+                'id',
+                'name',
+                'email',
+                'is_admin',
+                'is_first_login',
+                'validation_status',
+                'withdrawable_balance',
+                'email_verified_at',
+                'created_at',
+            ]);
+
         $pendingValidations = ValidationRequest::query()
             ->with('user:id,name,email')
             ->where('status', 'pending')
@@ -49,6 +63,7 @@ class ValidationApprovalController extends Controller
             ]);
 
         return Inertia::render('Admin/ValidationApproval', [
+            'users' => $users,
             'pendingValidations' => $pendingValidations,
             'pendingWithdrawals' => $pendingWithdrawals,
             'activeAccessGrantsCount' => AccessGrant::query()->active()->count(),

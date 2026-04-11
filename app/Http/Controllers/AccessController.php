@@ -14,6 +14,21 @@ class AccessController extends Controller
 {
     public const DEVICE_COOKIE = 'sentinel_device_id';
 
+    public static function queueDeviceCookie(Request $request, string $deviceId): void
+    {
+        Cookie::queue(Cookie::make(
+            self::DEVICE_COOKIE,
+            $deviceId,
+            60 * 24 * 365,
+            config('session.path', '/'),
+            config('session.domain'),
+            config('session.secure') ?? $request->isSecure(),
+            config('session.http_only', true),
+            config('session.partitioned', false),
+            config('session.same_site', 'lax'),
+        ));
+    }
+
     public function show(Request $request): Response|RedirectResponse
     {
         if (self::hasValidDeviceAccess($request)) {
@@ -72,7 +87,7 @@ class AccessController extends Controller
         $deviceHash = hash('sha256', $deviceId);
         $userAgentHash = hash('sha256', (string) $request->userAgent());
 
-        if ($grant->device_id_hash && ($grant->device_id_hash !== $deviceHash || $grant->user_agent_hash !== $userAgentHash)) {
+        if ($grant->device_id_hash && $grant->device_id_hash !== $deviceHash) {
             return back()->withErrors([
                 'code' => 'This access credential is already locked to another device.',
             ]);
@@ -82,12 +97,14 @@ class AccessController extends Controller
             $grant->device_id_hash = $deviceHash;
             $grant->user_agent_hash = $userAgentHash;
             $grant->bound_at = now();
+        } elseif ($grant->user_agent_hash !== $userAgentHash) {
+            $grant->user_agent_hash = $userAgentHash;
         }
 
         $grant->last_used_at = now();
         $grant->save();
 
-        Cookie::queue(Cookie::make(self::DEVICE_COOKIE, $deviceId, 60 * 24 * 365, '/', null, true, true, false, 'lax'));
+    self::queueDeviceCookie($request, $deviceId);
 
         $request->session()->put('private_access_granted', true);
 
@@ -105,7 +122,6 @@ class AccessController extends Controller
         return AccessGrant::query()
             ->active()
             ->where('device_id_hash', hash('sha256', $deviceId))
-            ->where('user_agent_hash', hash('sha256', (string) $request->userAgent()))
             ->exists();
     }
 }

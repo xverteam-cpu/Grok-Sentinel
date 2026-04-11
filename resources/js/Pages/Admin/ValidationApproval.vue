@@ -3,6 +3,10 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
 defineProps({
+  users: {
+    type: Array,
+    default: () => [],
+  },
   pendingValidations: {
     type: Array,
     default: () => [],
@@ -148,6 +152,82 @@ const resetRegisteredDevices = () => {
           <p class="mt-2"><span class="text-slate-400">Withdrawable Balance:</span> ¥{{ generatedAccess.withdrawable_balance }}</p>
           <p class="mt-2"><span class="text-slate-400">Code:</span> {{ generatedAccess.code }}</p>
           <p class="mt-2 break-all"><span class="text-slate-400">Link:</span> {{ generatedAccess.link }}</p>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-cyan-500/20 bg-slate-900/70 p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-cyan-300">All Users</h2>
+            <p class="mt-1 text-sm text-slate-300">Complete account list for the secure gateway.</p>
+          </div>
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Total users: {{ users.length }}</p>
+        </div>
+
+        <div v-if="users.length === 0" class="mt-4 rounded-lg border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">
+          No users found.
+        </div>
+
+        <div v-else class="mt-4 overflow-hidden rounded-xl border border-slate-700">
+          <div class="hidden overflow-x-auto lg:block">
+            <table class="min-w-full divide-y divide-slate-800 bg-slate-950/80 text-sm">
+              <thead class="bg-slate-900/90 text-left text-xs uppercase tracking-[0.2em] text-slate-400">
+                <tr>
+                  <th class="px-4 py-3 font-medium">Name</th>
+                  <th class="px-4 py-3 font-medium">Email</th>
+                  <th class="px-4 py-3 font-medium">Role</th>
+                  <th class="px-4 py-3 font-medium">Validation</th>
+                  <th class="px-4 py-3 font-medium">Balance</th>
+                  <th class="px-4 py-3 font-medium">First Login</th>
+                  <th class="px-4 py-3 font-medium">Verified</th>
+                  <th class="px-4 py-3 font-medium">Created</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 text-slate-200">
+                <tr v-for="user in users" :key="`user-row-${user.id}`" class="align-top">
+                  <td class="px-4 py-3 font-medium text-slate-100">{{ user.name }}</td>
+                  <td class="px-4 py-3 text-slate-300">{{ user.email }}</td>
+                  <td class="px-4 py-3">
+                    <span class="rounded-full px-2 py-1 text-xs font-semibold" :class="user.is_admin ? 'bg-amber-500/20 text-amber-200' : 'bg-cyan-500/20 text-cyan-200'">
+                      {{ user.is_admin ? 'Admin' : 'User' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 capitalize text-slate-300">{{ user.validation_status || 'pending' }}</td>
+                  <td class="px-4 py-3 text-slate-300">¥{{ user.withdrawable_balance }}</td>
+                  <td class="px-4 py-3 text-slate-300">{{ user.is_first_login ? 'Yes' : 'No' }}</td>
+                  <td class="px-4 py-3 text-slate-300">{{ user.email_verified_at ? 'Yes' : 'No' }}</td>
+                  <td class="px-4 py-3 text-slate-300">{{ new Date(user.created_at).toLocaleString() }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid gap-3 bg-slate-950/60 p-3 lg:hidden">
+            <div
+              v-for="user in users"
+              :key="`user-card-${user.id}`"
+              class="rounded-xl border border-slate-800 bg-slate-900/80 p-4"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="font-medium text-slate-100">{{ user.name }}</p>
+                  <p class="mt-1 break-all text-sm text-slate-300">{{ user.email }}</p>
+                </div>
+                <span class="rounded-full px-2 py-1 text-xs font-semibold" :class="user.is_admin ? 'bg-amber-500/20 text-amber-200' : 'bg-cyan-500/20 text-cyan-200'">
+                  {{ user.is_admin ? 'Admin' : 'User' }}
+                </span>
+              </div>
+
+              <div class="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-300">
+                <p><span class="text-slate-400">Validation:</span> {{ user.validation_status || 'pending' }}</p>
+                <p><span class="text-slate-400">Balance:</span> ¥{{ user.withdrawable_balance }}</p>
+                <p><span class="text-slate-400">First Login:</span> {{ user.is_first_login ? 'Yes' : 'No' }}</p>
+                <p><span class="text-slate-400">Verified:</span> {{ user.email_verified_at ? 'Yes' : 'No' }}</p>
+              </div>
+
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">Created {{ new Date(user.created_at).toLocaleString() }}</p>
+            </div>
+          </div>
         </div>
       </section>
 

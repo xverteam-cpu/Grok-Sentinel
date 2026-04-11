@@ -8,7 +8,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
 class EmergencyAdminAccessController extends Controller
@@ -41,7 +40,7 @@ class EmergencyAdminAccessController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        Cookie::queue(Cookie::make(AccessController::DEVICE_COOKIE, $deviceId, 60 * 24 * 365, '/', null, true, true, false, 'lax'));
+        AccessController::queueDeviceCookie($request, $deviceId);
 
         return redirect()->route('admin.dashboard')->with('success', 'Emergency admin access granted.');
     }
