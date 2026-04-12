@@ -25,7 +25,11 @@ defineProps({
 const page = usePage()
 const generatedAccess = computed(() => page.props.flash?.generatedAccess ?? null)
 const flashSuccess = computed(() => page.props.flash?.success ?? null)
+const pageErrors = computed(() => page.props.errors ?? {})
 const generatingUserId = ref(null)
+const fundingUserId = ref(null)
+const lastFundedUserId = ref(null)
+const fundAmounts = ref({})
 
 const accessForm = useForm({
   name: '',
@@ -60,6 +64,31 @@ const grantUserAccess = (userId) => {
       generatingUserId.value = null
     },
   })
+}
+
+const addFunds = (userId) => {
+  fundingUserId.value = userId
+  lastFundedUserId.value = userId
+
+  router.post(route('admin.users.funds.store', userId), {
+    amount: fundAmounts.value[userId] ?? '',
+  }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      fundAmounts.value[userId] = ''
+    },
+    onFinish: () => {
+      fundingUserId.value = null
+    },
+  })
+}
+
+const fundErrorForUser = (userId) => {
+  if (lastFundedUserId.value !== userId) {
+    return null
+  }
+
+  return pageErrors.value.amount ?? null
 }
 
 const resetRegisteredDevices = () => {
@@ -199,6 +228,7 @@ const resetRegisteredDevices = () => {
                   <th class="px-4 py-3 font-medium">First Login</th>
                   <th class="px-4 py-3 font-medium">Verified</th>
                   <th class="px-4 py-3 font-medium">Created</th>
+                  <th class="px-4 py-3 font-medium">Funding</th>
                   <th class="px-4 py-3 font-medium">Access</th>
                 </tr>
               </thead>
@@ -216,6 +246,28 @@ const resetRegisteredDevices = () => {
                   <td class="px-4 py-3 text-slate-300">{{ user.is_first_login ? 'Yes' : 'No' }}</td>
                   <td class="px-4 py-3 text-slate-300">{{ user.email_verified_at ? 'Yes' : 'No' }}</td>
                   <td class="px-4 py-3 text-slate-300">{{ new Date(user.created_at).toLocaleString() }}</td>
+                  <td class="px-4 py-3">
+                    <div class="space-y-2">
+                      <div class="flex gap-2">
+                        <input
+                          v-model="fundAmounts[user.id]"
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          class="w-32 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan-400"
+                          placeholder="Amount"
+                        >
+                        <button
+                          class="rounded-md bg-cyan-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                          :disabled="fundingUserId === user.id"
+                          @click="addFunds(user.id)"
+                        >
+                          {{ fundingUserId === user.id ? 'Adding...' : 'Add Funds' }}
+                        </button>
+                      </div>
+                      <p v-if="fundErrorForUser(user.id)" class="text-xs text-rose-400">{{ fundErrorForUser(user.id) }}</p>
+                    </div>
+                  </td>
                   <td class="px-4 py-3">
                     <button
                       class="rounded-md bg-amber-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
@@ -254,6 +306,27 @@ const resetRegisteredDevices = () => {
               </div>
 
               <p class="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">Created {{ new Date(user.created_at).toLocaleString() }}</p>
+
+              <div class="mt-4 space-y-2">
+                <div class="flex gap-2">
+                  <input
+                    v-model="fundAmounts[user.id]"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    class="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
+                    placeholder="Fund amount"
+                  >
+                  <button
+                    class="rounded-md bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    :disabled="fundingUserId === user.id"
+                    @click="addFunds(user.id)"
+                  >
+                    {{ fundingUserId === user.id ? 'Adding...' : 'Add Funds' }}
+                  </button>
+                </div>
+                <p v-if="fundErrorForUser(user.id)" class="text-sm text-rose-400">{{ fundErrorForUser(user.id) }}</p>
+              </div>
 
               <button
                 class="mt-4 w-full rounded-md bg-amber-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"

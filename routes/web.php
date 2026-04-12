@@ -82,6 +82,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         ->name('access-grants.store');
     Route::post('/access-grants/users/{user}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'generateUserAccessGrant'])
         ->name('access-grants.users.store');
+    Route::post('/users/{user}/funds', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'addFunds'])
+        ->name('users.funds.store');
     Route::post('/access-grants/reset-devices', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'resetRegisteredDevices'])
         ->name('access-grants.reset-devices');
     Route::patch('/validations/{validationRequest}', [\App\Http\Controllers\Admin\ValidationApprovalController::class, 'updateValidation'])

@@ -64,6 +64,7 @@ php artisan serve --port=8000
 - **Futuristic UI**: Sentinel login design with holographic 3D effects.
 - **2-Minute Security Scan**: Real-time terminal log feed with a focus on deep security analysis.
 - **Private Device Access**: Admin-generated access credentials can be redeemed and bound to a single device.
+- **Admin Balance Control**: Administrators can add funds directly to a user's withdrawable balance from the admin dashboard.
 - **Multi-Language Support**: Automatic locale switching (English/Japanese) based on user location.
 - **Responsive Design**: Optimized for both desktop and mobile devices.
 - **Secure Authentication**: Built on Laravel 11 and Inertia.js.

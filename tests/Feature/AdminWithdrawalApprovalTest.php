@@ -109,4 +109,42 @@ class AdminWithdrawalApprovalTest extends TestCase
         $this->assertSame('approved', $withdrawalRequest->fresh()->status);
         $this->assertSame('1065000.00', $user->fresh()->withdrawable_balance);
     }
+
+    public function test_admin_can_add_funds_to_a_user(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+        ]);
+
+        $user = User::factory()->create([
+            'withdrawable_balance' => 500000,
+        ]);
+
+        $response = $this->actingAs($admin)->post("/admin/users/{$user->id}/funds", [
+            'amount' => 125000.50,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertSessionHas('success', sprintf('Funds added successfully for %s.', $user->name));
+        $this->assertSame('625000.50', $user->fresh()->withdrawable_balance);
+    }
+
+    public function test_admin_cannot_add_zero_or_negative_funds(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+        ]);
+
+        $user = User::factory()->create([
+            'withdrawable_balance' => 500000,
+        ]);
+
+        $response = $this->actingAs($admin)->from('/admin/dashboard')->post("/admin/users/{$user->id}/funds", [
+            'amount' => 0,
+        ]);
+
+        $response->assertSessionHasErrors('amount');
+        $response->assertRedirect('/admin/dashboard');
+        $this->assertSame('500000.00', $user->fresh()->withdrawable_balance);
+    }
 }

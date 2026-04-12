@@ -109,6 +109,29 @@ class ValidationApprovalController extends Controller
         );
     }
 
+    public function addFunds(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+        ], [
+            'amount.gt' => 'The fund amount must be greater than zero.',
+        ]);
+
+        DB::transaction(function () use ($user, $validated): void {
+            $lockedUser = User::query()
+                ->lockForUpdate()
+                ->findOrFail($user->id);
+
+            $lockedUser->withdrawable_balance = round(
+                (float) $lockedUser->withdrawable_balance + (float) $validated['amount'],
+                2,
+            );
+            $lockedUser->save();
+        });
+
+        return back()->with('success', sprintf('Funds added successfully for %s.', $user->name));
+    }
+
     private function redirectWithGeneratedAccess(
         Request $request,
         User $targetUser,

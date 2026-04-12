@@ -14,6 +14,30 @@ const translations = {
             language: '言語',
             english: '英語',
             japanese: '日本語',
+            yes: 'はい',
+            no: 'いいえ',
+            name: '名前',
+            email: 'メール',
+            password: 'パスワード',
+            code: 'コード',
+            link: 'リンク',
+            user: 'ユーザー',
+            admin: '管理者',
+            role: '権限',
+            validation: '検証',
+            balance: '残高',
+            firstLogin: '初回ログイン',
+            verified: '確認済み',
+            created: '作成日時',
+            access: 'アクセス',
+            amount: '金額',
+            method: '方法',
+            destination: '宛先',
+            reference: '参照',
+            linkToken: 'リンクトークン',
+            notAvailable: '該当なし',
+            save: '保存',
+            saved: '保存済み',
         },
         login: {
             title: 'ログイン',
@@ -31,6 +55,7 @@ const translations = {
             secure: '保護済み',
             scanIntegrity: 'スキャン整合性:',
             verified: '確認済み',
+            statusId: 'ID: GS-ENTRANCE-A90 | AUTH: ELITE-ONLY',
         },
         access: {
             title: 'プライベートアクセス',
@@ -43,6 +68,26 @@ const translations = {
             confirm: 'このデバイスを確認',
             validating: 'デバイス確認中...',
         },
+        auth: {
+            registerTitle: '登録',
+            forgotPasswordTitle: 'パスワードをお忘れですか',
+            forgotPasswordDescription: '問題ありません。メールアドレスを入力してください。新しいパスワードを設定するためのリンクを送信します。',
+            emailPasswordResetLink: 'パスワード再設定リンクを送信',
+            confirmPasswordTitle: 'パスワード確認',
+            confirmPasswordDescription: 'これは保護されたエリアです。続行する前にパスワードを確認してください。',
+            confirm: '確認',
+            resetPasswordTitle: 'パスワードを再設定',
+            resetPassword: 'パスワードを再設定',
+            confirmPassword: 'パスワードを確認',
+            alreadyRegistered: 'すでに登録済みですか？',
+            verifyEmailTitle: 'メール確認',
+            verifyEmailDescription: '登録ありがとうございます。開始する前に、送信されたリンクをクリックしてメールアドレスを確認してください。メールが届いていない場合は、再送できます。',
+            verificationLinkSent: '登録時に指定したメールアドレスに新しい確認リンクを送信しました。',
+            resendVerification: '確認メールを再送',
+            logOut: 'ログアウト',
+            currentPassword: '現在のパスワード',
+            newPassword: '新しいパスワード',
+        },
         firstLogin: {
             liveFeed: 'シールドアクセス用ライブセキュリティフィードを初期化しました',
             estimated: '推定残り時間',
@@ -50,6 +95,22 @@ const translations = {
             handshake: 'ニューラルハンドシェイクが確立されました。すべてのセキュリティプロトコルが有効です。',
             goToDashboard: 'ダッシュボードへ進む',
             activate: '有効化',
+            completeTerminal: '> スキャン完了。ハンドシェイクは安定しています。',
+            randomLogs: [
+                '> 暗号化されたニューラルハンドシェイクを確立中...',
+                '> 管理者承認によりファイアウォール迂回を許可しました。',
+                '> 横浜銀行周辺ノードで脅威を検出しています...',
+                '> 悪意あるゴーストスクリプトをスキャンしています...',
+                '> ニューラルドリフトのためパケットヘッダーを解析しています...',
+                '> アップリンク整合性のため衛星リンクを同期しています...',
+                '> 未承認テレメトリのためキャッシュを消去しています...',
+                '> 脅威データベースと量子署名を照合しています...',
+                '> IPスプーフィングをリアルタイム監視しています...',
+                '> エントロピー強化のため暗号鍵を更新しています...',
+                '> 投機的実行に対するノード強化を行っています...',
+                '> 高帯域中継向けのセキュアトンネルを最適化しています...',
+                '> ステルス保護のためプロキシノードをローテーションしています...',
+            ],
         },
         dashboard: {
             availableFunds: '利用可能資金',
@@ -163,21 +224,119 @@ const translations = {
             statusMonitoring: '監視中',
             statusSecure: '保護済み',
             statusStable: '安定',
+            scanFeed: [
+                '> 失敗した出金経路の追跡のためSentinelフォレンジック中継を初期化しています...',
+                '> セキュア台帳ミラーに対してSWIFT経路エントロピーを検証しています...',
+                '> 外向き送金ペイロードを銀行ノードのチェックサムと照合しています...',
+                '> 暗号化された精算断片から経路グラフを再構築しています...',
+                '> 出金ハンドシェイク内のトランザクションnonceドリフトを調査しています...',
+                '> 銀行ミラーチャネル全体で流動性シャドウ分散を測定しています...',
+                '> 利用者側銀行残高をSentinel保管レジストリと比較しています...',
+                '> 横浜経路で敵対的な重複パケット署名を検出しています...',
+                '> 精算エンドポイント上の不正リプレイ経路を特定しています...',
+                '> 送金確認ストリーム内の偽装台帳ビーコンを追跡しています...',
+                '> ブラックホール吸引基盤からの経路汚染を調査しています...',
+                '> Sentinel信頼アンカーに対して銀行ノード完全性を評価しています...',
+                '> 地域のアンチスプーフ監視と不正テレメトリを同期しています...',
+                '> 出金確認ゲートウェイ周辺の異常バーストを検知しています...',
+                '> 流動性確認完了まで疑わしい中継経路をロックしています...',
+            ],
+            scanStartLogs: [
+                '> オペレーターによりSentinelスキャンが要求されました...',
+                '> 失敗した出金チャネルにフォレンジックレンズを接続しています...',
+            ],
+            scanCompleteLogs: [
+                '> スキャン完了。脅威相関指数がCRITICALへ上昇しました。',
+                '> 外部精算ハンドシェイク内で不審なミラー経路を確認しました。',
+                '> 出金中継を隔離しました。手動のSentinel検証が必要です。',
+            ],
+        },
+        admin: {
+            title: '管理ダッシュボード',
+            subtitle: '保留中の検証および出金キュー',
+            privateAccessControl: 'プライベートアクセス管理',
+            privateAccessHelp: 'まず利用者の認証情報を作成し、その後このデバイス専用のアクセスリンクを生成します。利用者はリンクを開いた後も、ここで指定した認証情報でログインする必要があります。',
+            activeDeviceGrants: '有効なデバイス許可数',
+            userName: 'ユーザー名',
+            loginEmail: 'ログインメール',
+            temporaryPassword: '一時パスワード',
+            withdrawableBalance: '出金可能残高',
+            resetDevices: '登録済みデバイスをすべてリセット',
+            resetDevicesConfirm: '登録済みデバイスの紐付けをすべて解除します。既存ユーザーは再度アクセスを引き換える必要があります。続行しますか？',
+            generateAccessLink: 'アクセスリンクを生成',
+            generating: '生成中...',
+            generatedAccessTitle: '生成済みアクセス情報',
+            allUsers: '全ユーザー',
+            completeAccountList: 'セキュアゲートウェイの全アカウント一覧です。',
+            totalUsers: '総ユーザー数',
+            noUsers: 'ユーザーが見つかりません。',
+            roleAdmin: '管理者',
+            roleUser: 'ユーザー',
+            statusApproved: '承認済み',
+            statusRejected: '拒否済み',
+            statusPending: '保留中',
+            pendingValidation: '保留中の検証',
+            noPendingValidation: '保留中の検証依頼はありません。',
+            pendingWithdrawal: '保留中の出金',
+            noPendingWithdrawal: '保留中の出金依頼はありません。',
+            giftCardCode: 'ギフトカードコード',
+            accept: '承認',
+            reject: '拒否',
+            grantPermission: '権限を付与',
+            generateAccessForUser: 'ユーザー用アクセスを生成',
+        },
+        profile: {
+            title: 'プロフィール',
+            profileInformation: 'プロフィール情報',
+            updateProfileDescription: 'アカウントのプロフィール情報とメールアドレスを更新します。',
+            unverifiedEmail: 'メールアドレスは未確認です。',
+            resendVerification: '確認メールを再送するにはこちらをクリックしてください。',
+            verificationSent: 'メールアドレス宛てに新しい確認リンクを送信しました。',
+            updatePassword: 'パスワードを更新',
+            updatePasswordDescription: '長くランダムなパスワードを使用してアカウントの安全性を確保してください。',
+            deleteAccount: 'アカウントを削除',
+            deleteAccountDescription: 'アカウントを削除すると、関連するすべてのリソースとデータが完全に削除されます。削除前に必要なデータを保存してください。',
+            deleteAccountConfirm: '本当にアカウントを削除しますか？',
+            deleteAccountConfirmDescription: 'アカウントを削除すると、関連するすべてのリソースとデータが完全に削除されます。削除を確認するため、パスワードを入力してください。',
         },
     },
+};
+
+const getTranslationValue = (locale, key) => {
+    const segments = key.split('.');
+    let current = translations[locale] ?? {};
+
+    for (const segment of segments) {
+        current = current?.[segment];
+    }
+
+    return current;
+};
+
+const applyReplacements = (value, replacements) => {
+    if (typeof value !== 'string') {
+        return value;
+    }
+
+    return Object.entries(replacements).reduce(
+        (result, [key, replacement]) => result.replaceAll(`:${key}`, replacement),
+        value,
+    );
 };
 
 export function useLocaleText() {
     const page = usePage();
     const locale = computed(() => page.props.locale ?? 'en');
 
-    const t = (key, fallback) => {
-        const segments = key.split('.');
-        let current = translations[locale.value];
+    const t = (key, fallback, replacements = {}) => {
+        const current = getTranslationValue(locale.value, key);
+        const resolved = typeof current === 'string' ? current : fallback;
 
-        for (const segment of segments) {
-            current = current?.[segment];
-        }
+        return applyReplacements(resolved, replacements);
+    };
+
+    const tm = (key, fallback) => {
+        const current = getTranslationValue(locale.value, key);
 
         return current ?? fallback;
     };
@@ -186,5 +345,6 @@ export function useLocaleText() {
         locale,
         isJapaneseLocale: computed(() => locale.value === 'ja'),
         t,
+        tm,
     };
 }
